@@ -1,0 +1,87 @@
+version: "3.8"
+
+services:
+  discord-bot:
+    build:
+      context: ./discord-bot
+      dockerfile: Dockerfile
+    container_name: crm-discord-bot
+    restart: unless-stopped
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - WEBHOOK_URL=${WEBHOOK_URL}/webhooks/discord
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+    networks:
+      - crm-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  telegram-bot:
+    build:
+      context: ./telegram-bot
+      dockerfile: Dockerfile
+    container_name: crm-telegram-bot
+    restart: unless-stopped
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - WEBHOOK_URL=${WEBHOOK_URL}/webhooks/telegram
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+    networks:
+      - crm-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  twitter-bot:
+    build:
+      context: ./twitter-bot
+      dockerfile: Dockerfile
+    container_name: crm-twitter-bot
+    restart: unless-stopped
+    environment:
+      - TWITTER_API_KEY=${TWITTER_API_KEY}
+      - TWITTER_API_SECRET=${TWITTER_API_SECRET}
+      - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN}
+      - TWITTER_ACCESS_SECRET=${TWITTER_ACCESS_SECRET}
+      - TWITTER_BEARER_TOKEN=${TWITTER_BEARER_TOKEN}
+      - WEBHOOK_URL=${WEBHOOK_URL}/webhooks/twitter
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - TRACKED_HASHTAGS=${TRACKED_HASHTAGS}
+      - TRACKED_ACCOUNTS=${TRACKED_ACCOUNTS}
+    networks:
+      - crm-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  farcaster-bot:
+    build:
+      context: ./farcaster-bot
+      dockerfile: Dockerfile
+    container_name: crm-farcaster-bot
+    restart: unless-stopped
+    environment:
+      - FARCASTER_HUB_URL=${FARCASTER_HUB_URL:-https://hub.farcaster.xyz:2281}
+      - WEBHOOK_URL=${WEBHOOK_URL}/webhooks/farcaster
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - TRACKED_CHANNELS=${TRACKED_CHANNELS}
+      - TRACKED_USERS=${TRACKED_USERS}
+    networks:
+      - crm-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  crm-network:
+    driver: bridge
