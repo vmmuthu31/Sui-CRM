@@ -13,7 +13,7 @@ Traditional approach creates **separate onchain objects** for every note, file, 
 - ✅ Low gas costs (~0.01 SUI per contact)
 - ✅ Simple smart contracts
 - ✅ Easy batch operations
-- ✅ Still fully encrypted and secure
+- ✅ Still fully encrypted and securee
 
 ---
 
