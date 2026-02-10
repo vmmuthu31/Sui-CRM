@@ -8,8 +8,8 @@ import { getCurrentPackageId, getCurrentRpcEndpoint, SHARED_OBJECTS } from '@/co
 const SUI_CLIENT = new SuiClient({ url: getCurrentRpcEndpoint() });
 const PACKAGE_ID = getCurrentPackageId();
 
-// Government whitelist ID from centralized config
-const GOVERNMENT_WHITELIST_ID = SHARED_OBJECTS.GOVERNMENT_WHITELIST;
+// Profile registry ID from centralized config
+const PROFILE_REGISTRY_ID = SHARED_OBJECTS.PROFILE_REGISTRY;
 
 // Walrus configuration
 const WALRUS_AGGREGATOR_URL = process.env.NEXT_PUBLIC_WALRUS_AGGREGATOR_URL;
@@ -41,15 +41,17 @@ export interface DecryptionResult {
   sessionKey?: SessionKey;
 }
 
-export interface DocumentMetadata {
+export interface ResourceMetadata {
+  resource_id: string;
+  profile_id: string;
+  org_id: string;
+  resource_type: 'note' | 'file';
   blob_id: string;
   encryption_id: string;
-  did_type: string;
-  document_type: string;
-  file_name: string;
+  access_level: number;
+  file_name?: string;
   created_at: string;
-  verification_completed: boolean;
-  verification_status: string;
+  created_by: string;
   walrus_url: string;
   sui_explorer_url: string;
 }
@@ -62,9 +64,9 @@ export class DocumentDecryptionService {
   /**
    * Creates a session key for decryption
    */
-  async createSessionKey(governmentAddress: string): Promise<SessionKey> {
+  async createSessionKey(userAddress: string): Promise<SessionKey> {
     return await SessionKey.create({
-      address: governmentAddress,
+      address: userAddress,
       packageId: PACKAGE_ID,
       ttlMin: this.TTL_MIN,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,37 +75,43 @@ export class DocumentDecryptionService {
   }
 
   /**
-   * Creates the move call constructor for government whitelist authorization
-   * This matches the pattern from main frontend
+   * Creates the move call constructor for CRM access control authorization
+   * This calls seal_approve with the resource, org registry, and profile registry
    */
-  private createMoveCallConstructor(whitelistId: string): MoveCallConstructor {
+  private createMoveCallConstructor(
+    resourceId: string,
+    orgRegistryId: string,
+    profileRegistryId: string
+  ): MoveCallConstructor {
     return (tx: Transaction, fullId: string) => {
       tx.moveCall({
-        target: `${PACKAGE_ID}::government_whitelist::seal_approve`,
+        target: `${PACKAGE_ID}::crm_access_control::seal_approve`,
         arguments: [
-          tx.pure.vector('u8', fromHex(fullId)),
-          tx.object(whitelistId)
+          tx.object(resourceId),
+          tx.object(orgRegistryId),
+          tx.object(profileRegistryId)
         ],
       });
     };
   }
 
   /**
-   * Downloads and decrypts documents using Seal SDK
+   * Downloads and decrypts CRM resources (notes/files) using Seal SDK
    */
-  async downloadAndDecryptDocuments(
-    documents: DocumentMetadata[],
+  async downloadAndDecryptResources(
+    resources: ResourceMetadata[],
+    orgRegistryId: string,
     sessionKey: SessionKey,
     onProgress?: (progress: string) => void
   ): Promise<DecryptionResult> {
     try {
-      console.log('🔓 Starting document decryption process...');
-      console.log('📄 Documents to decrypt:', documents.length);
+      console.log('🔓 Starting CRM resource decryption process...');
+      console.log('📄 Resources to decrypt:', resources.length);
 
-      if (!documents.length) {
+      if (!resources.length) {
         return {
           success: false,
-          error: 'No documents provided for decryption'
+          error: 'No resources provided for decryption'
         };
       }
 
@@ -116,25 +124,31 @@ export class DocumentDecryptionService {
       }
 
       const decryptedFileUrls: string[] = [];
-      const moveCallConstructor = this.createMoveCallConstructor(GOVERNMENT_WHITELIST_ID);
-
-      // Process each document
-      for (let i = 0; i < documents.length; i++) {
-        const doc = documents[i];
-        onProgress?.(`Decrypting document ${i + 1}/${documents.length}: ${doc.file_name}...`);
+      
+      // Process each resource
+      for (let i = 0; i < resources.length; i++) {
+        const resource = resources[i];
+        const fileName = resource.file_name || `${resource.resource_type}_${i + 1}`;
+        onProgress?.(`Decrypting resource ${i + 1}/${resources.length}: ${fileName}...`);
+        
+        const moveCallConstructor = this.createMoveCallConstructor(
+          resource.resource_id,
+          orgRegistryId,
+          PROFILE_REGISTRY_ID
+        );
 
         try {
           // Step 1: Download encrypted file from Walrus
-          const encryptedData = await this.downloadEncryptedFile(doc.blob_id, onProgress);
+          const encryptedData = await this.downloadEncryptedFile(resource.blob_id, onProgress);
 
           if (!encryptedData) {
-            console.error(`Failed to download blob ${doc.blob_id}`);
+            console.error(`Failed to download blob ${resource.blob_id}`);
             continue;
           }
 
           // Step 2: Parse encrypted object and decrypt using Seal SDK
-          console.log(`🔓 Decrypting with Seal SDK for blob ${doc.blob_id}`);
-          console.log(`🔑 Using encryption ID: ${doc.encryption_id}`);
+          console.log(`🔓 Decrypting with Seal SDK for blob ${resource.blob_id}`);
+          console.log(`🔑 Using encryption ID: ${resource.encryption_id}`);
           console.log(`📦 Encrypted data size: ${encryptedData.byteLength} bytes`);
 
           // Convert ArrayBuffer to Uint8Array if needed
@@ -159,29 +173,29 @@ export class DocumentDecryptionService {
             txBytes,
           });
 
-          console.log(`✅ Decryption successful for ${doc.file_name}`);
+          console.log(`✅ Decryption successful for ${fileName}`);
 
           // Step 3: Create blob URL for decrypted data
-          const mimeType = this.getMimeType(doc.file_name);
+          const mimeType = this.getMimeType(fileName);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const blob = new Blob([decryptedData as any], { type: mimeType });
           const url = URL.createObjectURL(blob);
           decryptedFileUrls.push(url);
 
         } catch (error) {
-          console.error(`Failed to decrypt ${doc.file_name}:`, error);
-          // Continue with other documents even if one fails
+          console.error(`Failed to decrypt ${fileName}:`, error);
+          // Continue with other resources even if one fails
         }
       }
 
       if (decryptedFileUrls.length === 0) {
         return {
           success: false,
-          error: 'Failed to decrypt any documents. Check if you have proper authorization.'
+          error: 'Failed to decrypt any resources. Check if you have proper authorization.'
         };
       }
 
-      onProgress?.(`Successfully decrypted ${decryptedFileUrls.length} of ${documents.length} documents.`);
+      onProgress?.(`Successfully decrypted ${decryptedFileUrls.length} of ${resources.length} resources.`);
 
       return {
         success: true,
@@ -354,4 +368,4 @@ export class DocumentDecryptionService {
   }
 }
 
-export const documentDecryptionService = new DocumentDecryptionService();
+export const crmDecryptionService = new DocumentDecryptionService();

@@ -3,7 +3,7 @@ import { SuiClient } from '@mysten/sui/client';
 import { SealClient } from '@mysten/seal';
 import { fromHex, toHex } from '@mysten/sui/utils';
 import { API_ENDPOINTS, buildApiUrl } from '@/config/api';
-import { getCurrentPackageId, getCurrentRpcEndpoint, SHARED_OBJECTS } from '@/config/contracts';
+import { getCurrentPackageId, getCurrentRpcEndpoint, SHARED_OBJECTS, CRM_ROLES, RESOURCE_TYPES } from '@/config/contracts';
 
 // Configuration for Walrus and Seal
 const NUM_EPOCH = 1;
@@ -12,8 +12,8 @@ const NUM_EPOCH = 1;
 const SUI_CLIENT = new SuiClient({ url: getCurrentRpcEndpoint() });
 const PACKAGE_ID = getCurrentPackageId();
 
-// Government whitelist ID from centralized config
-const GOVERNMENT_WHITELIST_ID = SHARED_OBJECTS.GOVERNMENT_WHITELIST;
+// Profile registry ID from centralized config
+const PROFILE_REGISTRY_ID = SHARED_OBJECTS.PROFILE_REGISTRY;
 
 // HTTPS-only Walrus publishers (for production use)
 const WALRUS_PUBLISHERS = [
@@ -92,16 +92,17 @@ export interface EncryptionResult {
 }
 
 interface EncryptionMetadataPayload {
-  user_address: string;
+  profile_id: string;
+  org_id: string;
+  resource_type: 'note' | 'file';
   blob_id: string;
   encryption_id: string;
-  did_type: string;
-  document_type: string;
-  file_name: string;
-  file_size: number;
-  content_type: string;
+  access_level: number; // CRM_ROLES.VIEWER | MANAGER | ADMIN
+  file_name?: string;
+  file_size?: number;
+  content_type?: string;
   sui_ref: string;
-  government_whitelist_id: string;
+  created_by: string;
 }
 
 export class DocumentEncryptionService {
@@ -156,25 +157,52 @@ export class DocumentEncryptionService {
     throw new Error(`All Walrus publishers failed. Last error: ${lastError?.message || 'Unknown error'}`);
   }
 
-  async encryptAndUploadDocument(file: File, userAddress: string): Promise<EncryptionResult> {
+  async encryptAndUploadResource(
+    data: File | string, // File for attachments, string for notes
+    profileId: string,
+    orgId: string,
+    orgRegistryId: string,
+    resourceType: 'note' | 'file',
+    accessLevel: number, // CRM_ROLES.VIEWER | MANAGER | ADMIN
+    userAddress: string
+  ): Promise<EncryptionResult> {
     try {
-      console.log('🔐 Starting document encryption process...');
-      console.log('📄 File:', file.name, file.size, 'bytes');
-      console.log('👤 User Address:', userAddress);
-      console.log('🏛️ Government Whitelist ID:', GOVERNMENT_WHITELIST_ID);
+      console.log('🔐 Starting CRM resource encryption process...');
+      console.log('📋 Resource type:', resourceType);
+      console.log('👤 Profile ID:', profileId);
+      console.log('🏢 Organization ID:', orgId);
+      console.log('🔐 Access Level:', accessLevel);
 
-      // Step 1: Generate encryption ID
+      // Step 1: Generate encryption ID using org registry
       const nonce = crypto.getRandomValues(new Uint8Array(5));
-      const policyObjectBytes = fromHex(GOVERNMENT_WHITELIST_ID);
+      const policyObjectBytes = fromHex(orgRegistryId);
       const encryptionId = toHex(new Uint8Array([...policyObjectBytes, ...nonce]));
 
       console.log('🔑 Generated Encryption ID:', encryptionId);
 
-      // Step 2: Convert file to ArrayBuffer
-      const arrayBuffer = await file.arrayBuffer();
-      const fileData = new Uint8Array(arrayBuffer);
+      // Step 2: Convert data to Uint8Array
+      let resourceData: Uint8Array;
+      let fileName: string;
+      let fileSize: number;
+      let contentType: string;
 
-      console.log('📊 File converted to Uint8Array:', fileData.length, 'bytes');
+      if (resourceType === 'file' && data instanceof File) {
+        const arrayBuffer = await data.arrayBuffer();
+        resourceData = new Uint8Array(arrayBuffer);
+        fileName = data.name;
+        fileSize = data.size;
+        contentType = data.type || 'application/octet-stream';
+      } else if (resourceType === 'note' && typeof data === 'string') {
+        const encoder = new TextEncoder();
+        resourceData = encoder.encode(data);
+        fileName = 'note.txt';
+        fileSize = resourceData.length;
+        contentType = 'text/plain';
+      } else {
+        throw new Error('Invalid data type for resource type');
+      }
+
+      console.log('📊 Resource data size:', resourceData.length, 'bytes');
 
       // Step 3: Encrypt with Seal
       console.log('🔒 Encrypting with Seal protocol...');
@@ -182,10 +210,10 @@ export class DocumentEncryptionService {
         threshold: 2,
         packageId: PACKAGE_ID,
         id: encryptionId,
-        data: fileData,
+        data: resourceData,
       });
 
-      console.log('✅ Document encrypted successfully');
+      console.log('✅ Resource encrypted successfully');
       console.log('📦 Encrypted data size:', encryptedBytes.length, 'bytes');
 
       // Step 4: Upload to Walrus with fallback
@@ -223,16 +251,17 @@ export class DocumentEncryptionService {
       // Store encryption metadata in database
       try {
         await this.storeEncryptionMetadata({
-          user_address: userAddress,
+          profile_id: profileId,
+          org_id: orgId,
+          resource_type: resourceType,
           blob_id: blobId,
           encryption_id: encryptionId,
-          did_type: 'identity_verification',
-          document_type: 'aadhaar',
-          file_name: file.name,
-          file_size: file.size,
-          content_type: file.type || 'image/jpeg',
+          access_level: accessLevel,
+          file_name: fileName,
+          file_size: fileSize,
+          content_type: contentType,
           sui_ref: suiRef,
-          government_whitelist_id: GOVERNMENT_WHITELIST_ID
+          created_by: userAddress,
         });
         console.log('✅ Encryption metadata stored in database');
       } catch (metadataError) {
@@ -270,7 +299,12 @@ export class DocumentEncryptionService {
   // Store encryption metadata in backend database
   private async storeEncryptionMetadata(metadata: EncryptionMetadataPayload): Promise<void> {
     try {
-      const response = await fetch(buildApiUrl(API_ENDPOINTS.ENCRYPTION_STORE), {
+      // Use the appropriate endpoint based on resource type
+      const endpoint = metadata.resource_type === 'note' 
+        ? API_ENDPOINTS.ENCRYPT_NOTE
+        : API_ENDPOINTS.ENCRYPT_FILE;
+      
+      const response = await fetch(buildApiUrl(endpoint), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -300,4 +334,4 @@ export class DocumentEncryptionService {
   }
 }
 
-export const documentEncryptionService = new DocumentEncryptionService();
+export const crmEncryptionService = new DocumentEncryptionService();
