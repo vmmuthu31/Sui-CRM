@@ -10,7 +10,7 @@ export const CONTRACT_PACKAGES = {
   DEVNET: '0xTODO',
   
   // Testnet deployment - Update after deployment
-  TESTNET: '0xTODO_DEPLOY_CRM_PACKAGE',
+  TESTNET: '0x0599bcc4edc02e5fb34875c7676a282af0b648df9904c251c52971d2b093a029',
   
   // Mainnet deployment (not deployed yet)
   MAINNET: '0xTODO',
@@ -22,7 +22,7 @@ export const CONTRACT_PACKAGES = {
 
 export const SHARED_OBJECTS = {
   // Profile Access Registry - Tracks profile ownership and org associations
-  PROFILE_REGISTRY: '0xTODO_AFTER_DEPLOYMENT',
+  PROFILE_REGISTRY: '0x43c9f0777ffaef377e4dce70f88f6fa45793d367c186d11a9ccaddca846e89d6',
   
   // Organization Access Registry - Example org registry (each org has its own)
   // Note: Each organization will have its own registry created dynamically
