@@ -1,16 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ConnectButton, useWallet } from "@suiet/wallet-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import CONTRACT_CONFIG from "@/lib/config/contracts";
 
 export default function Home() {
   const wallet = useWallet();
+  const [mounted, setMounted] = useState(false);
   const [orgName, setOrgName] = useState("");
   const [loading, setLoading] = useState(false);
   const [txDigest, setTxDigest] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleCreateOrg = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,8 +60,8 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col items-center p-24 bg-zinc-50 dark:bg-zinc-950">
-      <div className="mb-8 self-end">
-        <ConnectButton />
+      <div className="mb-8 self-end min-h-[48px]">
+        {mounted && <ConnectButton />}
       </div>
 
       <main className="flex w-full max-w-xl flex-col items-center justify-center p-8 bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800">
