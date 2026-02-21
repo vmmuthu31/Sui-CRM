@@ -85,12 +85,11 @@ module sui_crm::org {
     // Public Functions - Organization Management
     // ============================================================================
     
-    /// Create a new organization
-    /// The creator becomes the admin
-    public entry fun create_org(
+    /// Create a new organization and return it (composable)
+    public fun create_org(
         name: String,
         ctx: &mut TxContext
-    ) {
+    ): Org {
         let org_uid = object::new(ctx);
         let org_id = object::uid_to_inner(&org_uid);
         let created_at = tx_context::epoch_timestamp_ms(ctx);
@@ -111,6 +110,16 @@ module sui_crm::org {
             created_at,
         });
 
+        org
+    }
+
+    /// Create a new organization and transfer to the caller (standalone wrapper)
+    public entry fun create_and_transfer_org(
+        name: String,
+        ctx: &mut TxContext
+    ) {
+        let admin = tx_context::sender(ctx);
+        let org = create_org(name, ctx);
         transfer::transfer(org, admin);
     }
 
