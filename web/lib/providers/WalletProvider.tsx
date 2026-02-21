@@ -6,14 +6,13 @@ import {
   SuiClientProvider,
   createNetworkConfig,
 } from "@mysten/dapp-kit";
-import { getFullnodeUrl } from "@mysten/sui/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@mysten/dapp-kit/dist/index.css";
 
 const { networkConfig } = createNetworkConfig({
-  testnet: { url: getFullnodeUrl("testnet") },
-  mainnet: { url: getFullnodeUrl("mainnet") },
-  devnet: { url: getFullnodeUrl("devnet") },
+  testnet: { url: "https://fullnode.testnet.sui.io:443", network: "testnet" },
+  mainnet: { url: "https://fullnode.mainnet.sui.io:443", network: "mainnet" },
+  devnet: { url: "https://fullnode.devnet.sui.io:443", network: "devnet" },
 });
 
 const queryClient = new QueryClient();
