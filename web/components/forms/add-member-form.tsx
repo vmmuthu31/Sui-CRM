@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useWallet } from "@suiet/wallet-kit";
+import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import CONTRACT_CONFIG from "@/lib/config/contracts";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,8 @@ import { ROLE_LABELS, type OrgRole } from "@/lib/types/crm";
 const ORG_REGISTRY_ID = "";
 
 export function AddMemberForm() {
-  const wallet = useWallet();
+  const account = useCurrentAccount();
+  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const [address, setAddress] = useState("");
   const [role, setRole] = useState<OrgRole>(2);
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,7 @@ export function AddMemberForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!wallet.connected) {
+    if (!account) {
       setError("Connect your wallet first");
       return;
     }
@@ -52,7 +53,7 @@ export function AddMemberForm() {
           tx.pure.u8(role),
         ],
       });
-      await wallet.signAndExecuteTransaction({ transaction: tx });
+      await signAndExecuteTransaction({ transaction: tx });
       setAddress("");
       setRole(2);
     } catch (err: unknown) {
@@ -71,7 +72,7 @@ export function AddMemberForm() {
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="0x…"
-          disabled={loading || !wallet.connected}
+          disabled={loading || !account}
         />
       </div>
       <div className="space-y-2">
@@ -96,7 +97,7 @@ export function AddMemberForm() {
         </Select>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={loading || !wallet.connected}>
+      <Button type="submit" disabled={loading || !account}>
         {loading ? "Adding…" : "Add Member"}
       </Button>
     </form>

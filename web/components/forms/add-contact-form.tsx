@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useWallet } from "@suiet/wallet-kit";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 
 export function AddContactForm() {
   const router = useRouter();
-  const wallet = useWallet();
+  const account = useCurrentAccount();
   const [walletAddress, setWalletAddress] = useState("");
   const [twitter, setTwitter] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,7 @@ export function AddContactForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!wallet.connected) {
+    if (!account) {
       setError("Connect your wallet first");
       return;
     }
@@ -52,7 +52,7 @@ export function AddContactForm() {
           value={walletAddress}
           onChange={(e) => setWalletAddress(e.target.value)}
           placeholder="0x…"
-          disabled={loading || !wallet.connected}
+          disabled={loading || !account}
         />
       </div>
       <div className="space-y-2">
@@ -66,7 +66,7 @@ export function AddContactForm() {
         />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={loading || !wallet.connected}>
+      <Button type="submit" disabled={loading || !account}>
         {loading ? "Creating…" : "Create Contact"}
       </Button>
     </form>

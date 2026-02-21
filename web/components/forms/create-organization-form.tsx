@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useWallet } from "@suiet/wallet-kit";
+import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import CONTRACT_CONFIG from "@/lib/config/contracts";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,8 @@ interface CreateOrganizationFormProps {
 export function CreateOrganizationForm({
   onSuccess,
 }: CreateOrganizationFormProps) {
-  const wallet = useWallet();
+  const account = useCurrentAccount();
+  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const [orgName, setOrgName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +24,7 @@ export function CreateOrganizationForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!wallet.connected) {
+    if (!account) {
       setError("Please connect your wallet first");
       return;
     }
@@ -40,7 +41,7 @@ export function CreateOrganizationForm({
         target: CONTRACT_CONFIG.FUNCTIONS.ORG.CREATE_ORG,
         arguments: [tx.pure.string(orgName)],
       });
-      const res = await wallet.signAndExecuteTransaction({ transaction: tx });
+      const res = await signAndExecuteTransaction({ transaction: tx });
       setTxDigest(res.digest);
       setOrgName("");
       onSuccess?.();
@@ -62,7 +63,7 @@ export function CreateOrganizationForm({
           value={orgName}
           onChange={(e) => setOrgName(e.target.value)}
           placeholder="e.g. Acme Web3 Studio"
-          disabled={loading || !wallet.connected}
+          disabled={loading || !account}
         />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -73,7 +74,7 @@ export function CreateOrganizationForm({
       )}
       <Button
         type="submit"
-        disabled={loading || !wallet.connected || !orgName.trim()}
+        disabled={loading || !account || !orgName.trim()}
       >
         {loading ? "Creating…" : "Create Organization"}
       </Button>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useWallet } from "@suiet/wallet-kit";
+import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import CONTRACT_CONFIG from "@/lib/config/contracts";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,8 @@ const mockInteractions: { type: string; message: string; createdAt: string }[] =
   [];
 
 export function ProfileInteractions({ profileId }: ProfileInteractionsProps) {
-  const wallet = useWallet();
+  const account = useCurrentAccount();
+  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const [type, setType] = useState("message");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,7 +47,7 @@ export function ProfileInteractions({ profileId }: ProfileInteractionsProps) {
 
   const handleLog = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!wallet.connected) {
+    if (!account) {
       setError("Connect your wallet first");
       return;
     }
@@ -68,7 +69,7 @@ export function ProfileInteractions({ profileId }: ProfileInteractionsProps) {
           tx.pure.u64(timestamp),
         ],
       });
-      await wallet.signAndExecuteTransaction({ transaction: tx });
+      await signAndExecuteTransaction({ transaction: tx });
       setMessage("");
     } catch (err: unknown) {
       setError(
@@ -115,7 +116,7 @@ export function ProfileInteractions({ profileId }: ProfileInteractionsProps) {
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" disabled={loading || !wallet.connected}>
+          <Button type="submit" disabled={loading || !account}>
             {loading ? "Logging…" : "Log Interaction"}
           </Button>
         </form>
