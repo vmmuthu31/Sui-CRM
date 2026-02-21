@@ -38,7 +38,7 @@ export function CreateOrganizationForm({
     try {
       const tx = new Transaction();
       tx.moveCall({
-        target: CONTRACT_CONFIG.FUNCTIONS.ORG.CREATE_ORG,
+        target: CONTRACT_CONFIG.FUNCTIONS.ACCESS_CONTROL.CREATE_ORG_AND_REGISTRY,
         arguments: [tx.pure.string(orgName)],
       });
       const res = await signAndExecuteTransaction({ transaction: tx });
