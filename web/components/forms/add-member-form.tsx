@@ -16,12 +16,10 @@ import {
 } from "@/components/ui/select";
 import { ROLE_LABELS, type OrgRole } from "@/lib/types/crm";
 
-// Placeholder: org registry ID from context/API in real app
-const ORG_REGISTRY_ID = "";
-
 export function AddMemberForm() {
   const account = useCurrentAccount();
   const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const [registryId, setRegistryId] = useState<string>(CONTRACT_CONFIG.SHARED_OBJECTS.EXAMPLE_ORG_REGISTRY || "");
   const [address, setAddress] = useState("");
   const [role, setRole] = useState<OrgRole>(2);
   const [loading, setLoading] = useState(false);
@@ -33,12 +31,12 @@ export function AddMemberForm() {
       setError("Connect your wallet first");
       return;
     }
-    if (!address.trim()) {
-      setError("Wallet address is required");
+    if (!registryId.trim()) {
+      setError("Organization Registry ID is required");
       return;
     }
-    if (!ORG_REGISTRY_ID) {
-      setError("Organization not set. Create an organization first.");
+    if (!address.trim()) {
+      setError("Wallet address is required");
       return;
     }
     setLoading(true);
@@ -48,7 +46,7 @@ export function AddMemberForm() {
       tx.moveCall({
         target: CONTRACT_CONFIG.FUNCTIONS.ACCESS_CONTROL.ADD_ORG_MEMBER,
         arguments: [
-          tx.object(ORG_REGISTRY_ID),
+          tx.object(registryId.trim()),
           tx.pure.address(address.trim()),
           tx.pure.u8(role),
         ],
@@ -65,6 +63,16 @@ export function AddMemberForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="registry-id">Organization Registry ID</Label>
+        <Input
+          id="registry-id"
+          value={registryId}
+          onChange={(e) => setRegistryId(e.target.value)}
+          placeholder="0x..."
+          disabled={loading || !account}
+        />
+      </div>
       <div className="space-y-2">
         <Label htmlFor="member-address">Wallet address</Label>
         <Input
