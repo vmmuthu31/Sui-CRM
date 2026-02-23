@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-import CONTRACT_CONFIG from "@/lib/config/contracts";
+import CONTRACT_CONFIG, { buildExplorerUrl } from "@/lib/config/contracts";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,7 +52,16 @@ export function AddMemberForm() {
           tx.pure.u8(role),
         ],
       });
-      await signAndExecuteTransaction({ transaction: tx });
+      const res = await signAndExecuteTransaction({ transaction: tx });
+
+      toast.success("Member Added Successfully", {
+        description: `Wallet address has been granted role access.`,
+        action: {
+          label: "Explorer",
+          onClick: () => window.open(buildExplorerUrl(res.digest, "tx"), "_blank"),
+        },
+      });
+
       setAddress("");
       setRole(2);
     } catch (err: unknown) {

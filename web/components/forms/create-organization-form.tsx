@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-import CONTRACT_CONFIG from "@/lib/config/contracts";
+import CONTRACT_CONFIG, { buildExplorerUrl } from "@/lib/config/contracts";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +21,6 @@ export function CreateOrganizationForm({
   const [orgName, setOrgName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [txDigest, setTxDigest] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +34,6 @@ export function CreateOrganizationForm({
     }
     setLoading(true);
     setError(null);
-    setTxDigest(null);
     try {
       const tx = new Transaction();
       tx.moveCall({
@@ -42,7 +41,15 @@ export function CreateOrganizationForm({
         arguments: [tx.pure.string(orgName)],
       });
       const res = await signAndExecuteTransaction({ transaction: tx });
-      setTxDigest(res.digest);
+
+      toast.success("Organization Created!", {
+        description: "Your organization and registry were successfully generated.",
+        action: {
+          label: "View on Explorer",
+          onClick: () => window.open(buildExplorerUrl(res.digest, "tx"), "_blank"),
+        },
+      });
+
       setOrgName("");
       onSuccess?.();
     } catch (err: unknown) {
@@ -67,11 +74,6 @@ export function CreateOrganizationForm({
         />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {txDigest && (
-        <p className="text-sm text-green-600 dark:text-green-400">
-          Created! Tx: {txDigest.slice(0, 16)}…
-        </p>
-      )}
       <Button
         type="submit"
         disabled={loading || !account || !orgName.trim()}

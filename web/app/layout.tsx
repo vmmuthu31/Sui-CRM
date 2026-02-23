@@ -6,6 +6,7 @@ import {
   WalletProvider,
   ZkLoginProvider,
 } from "@/lib/providers";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
             <ThemeProvider>{children}</ThemeProvider>
           </ZkLoginProvider>
         </WalletProvider>
+        <Toaster position="bottom-right" richColors />
       </body>
     </html>
   );

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-import CONTRACT_CONFIG from "@/lib/config/contracts";
+import CONTRACT_CONFIG, { buildExplorerUrl } from "@/lib/config/contracts";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,7 +59,15 @@ export function AddContactForm() {
         ],
       });
 
-      await signAndExecuteTransaction({ transaction: tx });
+      const res = await signAndExecuteTransaction({ transaction: tx });
+
+      toast.success("Contact Saved!", {
+        description: `Profile ${uniqueTag} created securely.`,
+        action: {
+          label: "View Tx",
+          onClick: () => window.open(buildExplorerUrl(res.digest, "tx"), "_blank"),
+        },
+      });
 
       console.log("Add contact successful", { walletAddress, twitter });
       router.push("/dashboard/contacts"); // Use correct layout path to prevent weird nav
