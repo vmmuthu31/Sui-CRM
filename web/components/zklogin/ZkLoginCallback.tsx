@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { ZkLoginService } from "@/lib/zklogin/zklogin";
-import { SessionManager } from "@/lib/session-manager";
+import { SessionManager } from "@/lib/zklogin/session";
 import { jwtDecode } from "jwt-decode";
 import { DecodedJWT } from "@/lib/zklogin/zklogin";
 

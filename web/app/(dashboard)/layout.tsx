@@ -1,21 +1,76 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ConnectButton } from "@mysten/dapp-kit";
+import { useRouter } from "next/navigation";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { Separator } from "@/components/ui/separator";
 import {
   Search,
   ChevronRight,
-  Folder,
   LayoutGrid,
   Share2,
   Plus,
-  ArrowLeft
+  ArrowLeft,
+  LogOut,
+  Wallet,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SessionManager, type CachedProofData } from "@/lib/zklogin/session";
+
+/**
+ * Header wallet area:
+ * - Not logged in → "Connect Wallet" button → navigates to /login
+ * - Logged in     → Shows short Sui address + logout icon
+ */
+function WalletArea() {
+  const router = useRouter();
+  const [proof, setProof] = useState<CachedProofData | null>(null);
+
+  useEffect(() => {
+    setProof(SessionManager.getProof());
+  }, []);
+
+  const handleLogout = () => {
+    SessionManager.clearAll();
+    setProof(null);
+  };
+
+  if (!proof) {
+    return (
+      <Button
+        onClick={() => router.push("/login")}
+        className="h-10 gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl px-5 shadow-lg shadow-indigo-200 transition-all active:scale-95"
+      >
+        <ShieldCheck className="size-3.5" />
+        Connect&nbsp;·&nbsp;ZK Login
+      </Button>
+    );
+  }
+
+  const shortAddress = `${proof.address.slice(0, 6)}…${proof.address.slice(-4)}`;
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 h-10 pl-3 pr-4 bg-indigo-50 border border-indigo-100 rounded-xl">
+        <Wallet className="size-3.5 text-indigo-500 shrink-0" />
+        <span className="text-[10px] font-black text-indigo-600 tracking-widest font-mono">
+          {shortAddress}
+        </span>
+      </div>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handleLogout}
+        className="size-10 rounded-xl border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50 transition-all"
+        title="Sign out"
+      >
+        <LogOut className="size-4" />
+      </Button>
+    </div>
+  );
+}
 
 export default function DashboardLayout({
   children,
@@ -66,12 +121,9 @@ export default function DashboardLayout({
                 <Plus className="size-4" />
                 Add Entry
               </Button>
-              {mounted && (
-                <>
-                  <div className="mx-2 h-6 w-[1px] bg-slate-100" />
-                  <ConnectButton className="!h-10 !text-[10px] !font-black !uppercase !tracking-widest !rounded-xl !bg-indigo-50 !border-indigo-100 !text-indigo-600 hover:!bg-indigo-100 transition-all shadow-sm" />
-                </>
-              )}
+              <div className="mx-1" />
+              {/* Renders after hydration to avoid localStorage SSR mismatch */}
+              {mounted && <WalletArea />}
             </div>
           </header>
           <div className="flex-1 overflow-auto p-10">{children}</div>
@@ -80,4 +132,3 @@ export default function DashboardLayout({
     </SidebarProvider>
   );
 }
-

@@ -7,12 +7,17 @@ import {
     genAddressSeed,
     computeZkLoginAddressFromSeed,
 } from "@mysten/sui/zklogin";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { jwtDecode } from "jwt-decode";
 import { SessionManager } from "./session";
 
-// NOTE: These are testnet URLs for Mysten's services.
-// Do NOT use these in Mainnet production without updating to your own/mainnet providers!
-const PROVER_URL = "https://prover-dev.mystenlabs.com/v1";
+const NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK as "testnet" | "mainnet" | "devnet") || "testnet";
+const RPC_URL = process.env.NEXT_PUBLIC_SUI_RPC_URL || `https://fullnode.${NETWORK}.sui.io:443`;
+
+// Mysten's ZK prover — testnet uses prover-dev, mainnet uses prover
+const PROVER_URL = NETWORK === "mainnet"
+    ? "https://prover.mystenlabs.com/v1"
+    : "https://prover-dev.mystenlabs.com/v1";
 const OAUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 
 export interface DecodedJWT {
@@ -40,10 +45,11 @@ export class ZkLoginService {
         // 1. Generate new ephemeral keypair
         const ephemeralKeyPair = new Ed25519Keypair();
 
-        // 2. Define validity (Max Epoch). For test environments, hardcoding or fetching current epoch + 2 is recommended.
-        // In a real dApp, fetch this from `suiClient.getLatestSuiSystemState()`
-        const currentEpoch = 0; // Replace with actual fetch if integrating
-        const maxEpoch = currentEpoch + 2;
+        // 2. Fetch the real current epoch from Sui so the ZK proof is valid
+        const suiClient = new SuiJsonRpcClient({ url: RPC_URL, network: NETWORK });
+        const { epoch } = await suiClient.getLatestSuiSystemState();
+        const currentEpoch = Number(epoch);
+        const maxEpoch = currentEpoch + 10; // valid for ~10 epochs (~10 hours on testnet)
 
         // 3. Generate randomness and nonce
         const randomness = generateRandomness();
@@ -169,6 +175,6 @@ export class ZkLoginService {
      * Decodes a JWT and computes the Sui zkLogin Address.
      */
     static getZkLoginAddress(jwtToken: string, userSalt: string): string {
-        return jwtToAddress(jwtToken, userSalt);
+        return jwtToAddress(jwtToken, userSalt, false);
     }
 }
