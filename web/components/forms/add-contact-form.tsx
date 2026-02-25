@@ -9,13 +9,17 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useSuiNSInput } from "@/hooks/useSuiNS";
+import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 
 export function AddContactForm() {
   const router = useRouter();
   const account = useCurrentAccount();
   const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
-  const [walletAddress, setWalletAddress] = useState("");
+  // Raw input (can be "0x…" address or "alice.sui" name)
+  const [walletInput, setWalletInput] = useState("");
+  const { resolvedAddress, suiName, resolving, inputError } = useSuiNSInput(walletInput);
   const [twitter, setTwitter] = useState("");
 
   // Organization state fields
@@ -32,8 +36,13 @@ export function AddContactForm() {
       setError("Connect your wallet first");
       return;
     }
-    if (!walletAddress.trim() || !orgId.trim()) {
+    const finalAddress = resolvedAddress ?? walletInput.trim();
+    if (!finalAddress || !orgId.trim()) {
       setError("Organization ID and Wallet address are required");
+      return;
+    }
+    if (inputError) {
+      setError(inputError);
       return;
     }
 
@@ -52,7 +61,7 @@ export function AddContactForm() {
         arguments: [
           tx.object(profileRegistryId.trim()),
           tx.pure.address(orgId.trim()),       // Org ID
-          tx.pure.address(walletAddress.trim()),
+          tx.pure.address(finalAddress),
           tx.pure.string(uniqueTag.trim()),
           tx.pure.vector('u8', blobBytes),     // blob_id as vector
           tx.pure.vector('u8', encBytes),      // encryption_id as vector
@@ -69,9 +78,9 @@ export function AddContactForm() {
         },
       });
 
-      console.log("Add contact successful", { walletAddress, twitter });
+      console.log("Add contact successful", { address: finalAddress, suiName, twitter });
       // Clear out the form to prevent double submits 
-      setWalletAddress("");
+      setWalletInput("");
       setTwitter("");
       setOrgId("");
       setUniqueTag("CONTACT_001");
@@ -107,14 +116,37 @@ export function AddContactForm() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="contact-wallet">Wallet address</Label>
-        <Input
-          id="contact-wallet"
-          value={walletAddress}
-          onChange={(e) => setWalletAddress(e.target.value)}
-          placeholder="0x…"
-          disabled={loading || !account}
-        />
+        <Label htmlFor="contact-wallet">Wallet address or .sui name</Label>
+        <div className="relative">
+          <Input
+            id="contact-wallet"
+            value={walletInput}
+            onChange={(e) => setWalletInput(e.target.value)}
+            placeholder="0x… or alice.sui"
+            disabled={loading || !account}
+            className={inputError ? "border-red-300 focus-visible:ring-red-200" : suiName ? "border-emerald-300 focus-visible:ring-emerald-100" : ""}
+          />
+          {/* Resolution status indicator */}
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            {resolving && <Loader2 className="size-4 text-slate-400 animate-spin" />}
+            {!resolving && suiName && <CheckCircle2 className="size-4 text-emerald-500" />}
+            {!resolving && inputError && <AlertCircle className="size-4 text-red-400" />}
+          </div>
+        </div>
+        {/* Show resolved address when a .sui name is typed */}
+        {suiName && resolvedAddress && (
+          <p className="text-xs text-emerald-600 font-medium flex items-center gap-1.5 mt-1">
+            <CheckCircle2 className="size-3.5" />
+            Resolved <span className="font-bold">{suiName}</span> →{" "}
+            <span className="font-mono">{resolvedAddress.slice(0, 8)}…{resolvedAddress.slice(-6)}</span>
+          </p>
+        )}
+        {inputError && (
+          <p className="text-xs text-red-500 flex items-center gap-1.5 mt-1">
+            <AlertCircle className="size-3.5" />
+            {inputError}
+          </p>
+        )}
       </div>
       <div className="space-y-2">
         <Label htmlFor="unique-tag">Unique Tag</Label>

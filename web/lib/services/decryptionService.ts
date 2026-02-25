@@ -1,11 +1,11 @@
-import { SuiClient } from '@mysten/sui/client';
+import { SuiJsonRpcClient } from '@mysten/sui/jsonRpc';
 import { Transaction } from '@mysten/sui/transactions';
 import { SealClient, SessionKey, EncryptedObject } from '@mysten/seal';
 import { fromHex } from '@mysten/sui/utils';
-import { getCurrentPackageId, getCurrentRpcEndpoint, SHARED_OBJECTS } from '@/config/contracts';
+import { getCurrentPackageId, getCurrentRpcEndpoint, SHARED_OBJECTS } from '@/lib/config/contracts';
 
 // Configuration matching the encryption service - Using centralized contract config
-const SUI_CLIENT = new SuiClient({ url: getCurrentRpcEndpoint() });
+const SUI_CLIENT = new SuiJsonRpcClient({ url: getCurrentRpcEndpoint(), network: 'testnet' }) as any;
 const PACKAGE_ID = getCurrentPackageId();
 
 // Profile registry ID from centralized config

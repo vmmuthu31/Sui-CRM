@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.enoki.mystenlabs.com)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(ls:*)",
+      "Bash(tail:*)",
+      "Bash(head:*)",
+      "WebFetch(domain:docs.suins.io)",
+      "WebFetch(domain:www.npmjs.com)"
+    ]
+  }
+}

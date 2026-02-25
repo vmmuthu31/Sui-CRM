@@ -1,15 +1,15 @@
 
-import { SuiClient } from '@mysten/sui/client';
+import { SuiJsonRpcClient } from '@mysten/sui/jsonRpc';
 import { SealClient } from '@mysten/seal';
 import { fromHex, toHex } from '@mysten/sui/utils';
-import { API_ENDPOINTS, buildApiUrl } from '@/config/api';
-import { getCurrentPackageId, getCurrentRpcEndpoint, SHARED_OBJECTS, CRM_ROLES, RESOURCE_TYPES } from '@/config/contracts';
+import { API_ENDPOINTS, buildApiUrl } from '@/lib/config/api';
+import { getCurrentPackageId, getCurrentRpcEndpoint, SHARED_OBJECTS, CRM_ROLES, RESOURCE_TYPES } from '@/lib/config/contracts';
 
 // Configuration for Walrus and Seal
 const NUM_EPOCH = 1;
 
 // Sui configuration - Using centralized contract config
-const SUI_CLIENT = new SuiClient({ url: getCurrentRpcEndpoint() });
+const SUI_CLIENT = new SuiJsonRpcClient({ url: getCurrentRpcEndpoint(), network: 'testnet' }) as any;
 const PACKAGE_ID = getCurrentPackageId();
 
 // Profile registry ID from centralized config
