@@ -307,13 +307,18 @@ fun check_access_policy(
     false
 }
 
-/// Seal approval function - called by Seal to verify decryption access
-public entry fun seal_approve(
+/// Seal approval function - called by Seal nodes to verify decryption access
+/// The first parameter MUST be `id: vector<u8>` (the Seal encryption ID bytes)
+/// This function must be `entry fun` (NOT `public entry fun`) and must be side-effect free
+entry fun seal_approve(
+    id: vector<u8>,
     resource: &EncryptedResource,
     org_registry: &OrgAccessRegistry,
     profile_registry: &ProfileAccessRegistry,
     ctx: &TxContext
 ) {
+    // Suppress unused variable warning - Seal SDK validates id before calling this
+    let _ = id;
     let caller = tx_context::sender(ctx);
     assert!(
         check_access_policy(caller, resource, org_registry, profile_registry),
