@@ -84,12 +84,15 @@ export class DocumentDecryptionService {
     profileRegistryId: string
   ): MoveCallConstructor {
     return (tx: Transaction, fullId: string) => {
+      // First arg MUST be the Seal encryption ID as vector<u8> bytes (without 0x prefix)
+      const idHex = fullId.startsWith('0x') ? fullId.slice(2) : fullId;
       tx.moveCall({
         target: `${PACKAGE_ID}::crm_access_control::seal_approve`,
         arguments: [
-          tx.object(resourceId),
-          tx.object(orgRegistryId),
-          tx.object(profileRegistryId)
+          tx.pure.vector('u8', fromHex(idHex)),  // id: vector<u8> — REQUIRED first param
+          tx.object(resourceId),                  // resource: &EncryptedResource
+          tx.object(orgRegistryId),               // org_registry: &OrgAccessRegistry
+          tx.object(profileRegistryId)            // profile_registry: &ProfileAccessRegistry
         ],
       });
     };

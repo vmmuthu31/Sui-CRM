@@ -9,8 +9,8 @@ export const CONTRACT_PACKAGES = {
   // Development network (not deployed yet)
   DEVNET: '0xTODO',
 
-  // Testnet deployment - Update after deployment
-  TESTNET: '0x4812b5ca085fd9b6b15c68bcf1fecbd7963bb5772b0fad30fe5db8cb1fd9f928',
+  // Testnet deployment - Fixed seal_approve ENoAccess assertion (2026-03-02 v3)
+  TESTNET: '0xd86712244386bdfd82906dae8bed7be6760df054536abde426fd2dc16f9b41a4',
 
   // Mainnet deployment (not deployed yet)
   MAINNET: '0xTODO',
@@ -21,11 +21,11 @@ export const CONTRACT_PACKAGES = {
 // =============================================================================
 
 export const SHARED_OBJECTS = {
-  // Profile Access Registry - Tracks profile ownership and org associations
-  PROFILE_REGISTRY: '0x97ec5d19b9cdce34ff271ed23bf096959238169193b220cba93a45e563cf77f3',
+  // Profile Access Registry - Latest deployment (2026-03-02 v3)
+  PROFILE_REGISTRY: '0x395e1731de16b7393f80afba04252f18c56e1cf994e9d77c755a759f8bc5c4b0',
 
-  // Organization Access Registry - TestOrg created on Sui Testnet
-  EXAMPLE_ORG_REGISTRY: '0x44688d0e99fef7b390b56665f9b97706cb24c7ce2bc3afd575b0116d3affd54a',
+  // Organization Access Registry - CRMOrg2, deployed with new package v3 (2026-03-02)
+  EXAMPLE_ORG_REGISTRY: '0xea7c522c85660fc793d51e64464caf29956594d47997d4217e0a22000cdcd4e6',
 
   // SUI Clock object - System clock for timestamp operations
   CLOCK: '0x0000000000000000000000000000000000000000000000000000000000000006',
