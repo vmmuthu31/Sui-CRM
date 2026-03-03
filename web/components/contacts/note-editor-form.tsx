@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 import type { OrgRole } from "@/lib/types/crm";
 
 interface NoteEditorFormProps {
@@ -47,13 +49,8 @@ export function NoteEditorForm({
     setLoading(true);
     setError(null);
     try {
-      // 1) Direct Walrus upload (Phase 1)
-      // 2) Seal encrypt + Walrus upload (Phase 2)
-      console.log("Encrypting and uploading note...", { profileId, content, accessLevel });
       const { crmEncryptionService } = await import("@/lib/services/encryptionService");
-
-      // MOCK DATA for now until we have full auth context
-      const MOCK_ORG_ID = CONTRACT_CONFIG.SHARED_OBJECTS.EXAMPLE_ORG_REGISTRY; // org acts as its own registry
+      const MOCK_ORG_ID = CONTRACT_CONFIG.SHARED_OBJECTS.EXAMPLE_ORG_REGISTRY;
       const MOCK_ORG_REGISTRY_ID = CONTRACT_CONFIG.SHARED_OBJECTS.EXAMPLE_ORG_REGISTRY;
 
       const result = await crmEncryptionService.encryptAndUploadResource(
@@ -61,7 +58,7 @@ export function NoteEditorForm({
         profileId,
         MOCK_ORG_ID,
         MOCK_ORG_REGISTRY_ID,
-        'note',
+        "note",
         accessLevel,
         account.address
       );
@@ -69,83 +66,97 @@ export function NoteEditorForm({
       if (!result.success || !result.encryptionId || !result.blobId) {
         throw new Error(result.error || "Failed to encrypt and upload to Walrus");
       }
-      console.log("Uploaded successfully! Encryption ID:", result.encryptionId, "Blob ID:", result.blobId);
 
-      // 3) Create the EncryptedResource object on Sui (Phase 3)
-      console.log("Minting EncryptedResource on Sui...");
       const tx = new Transaction();
-
-      // Ensure encryptionId does not have 0x prefix for the vector<u8> argument
-      const cleanEncId = result.encryptionId.startsWith('0x') ? result.encryptionId.slice(2) : result.encryptionId;
-
+      const cleanEncId = result.encryptionId.startsWith("0x")
+        ? result.encryptionId.slice(2)
+        : result.encryptionId;
       const walrusBlobIdBytes = new TextEncoder().encode(result.blobId);
       const sealEncryptionIdBytes = new TextEncoder().encode(cleanEncId);
-
-      // We use the connected wallet's address dynamically as a valid 32-byte hex string
-      // so the SUI SDK validation passes. In production, these will be the real Object IDs.
       const MOCK_VALID_ADDRESS = account.address;
 
       const [resourceObj] = tx.moveCall({
         target: CONTRACT_CONFIG.FUNCTIONS.ACCESS_CONTROL.CREATE_ENCRYPTED_RESOURCE,
         arguments: [
-          tx.pure.address(MOCK_VALID_ADDRESS), // Mocking profile_id with wallet address
-          tx.pure.address(MOCK_VALID_ADDRESS), // Mocking org_id with wallet address
+          tx.pure.address(MOCK_VALID_ADDRESS),
+          tx.pure.address(MOCK_VALID_ADDRESS),
           tx.pure.u8(CONTRACT_CONFIG.RESOURCE_TYPES.NOTE),
-          tx.pure.vector('u8', walrusBlobIdBytes),
-          tx.pure.vector('u8', sealEncryptionIdBytes),
+          tx.pure.vector("u8", walrusBlobIdBytes),
+          tx.pure.vector("u8", sealEncryptionIdBytes),
           tx.pure.u8(accessLevel),
           tx.pure.u64(Date.now()),
         ],
       });
       tx.transferObjects([resourceObj], tx.pure.address(account.address));
 
-      const res = await signAndExecuteTransaction({
-        transaction: tx
-      });
-
-      console.log("Transaction Submitted:", res.digest);
+      const res = await signAndExecuteTransaction({ transaction: tx });
       const txResult = await client.waitForTransaction({
         digest: res.digest,
-        options: { showObjectChanges: true }
+        options: { showObjectChanges: true },
       });
 
-      // Find the created object ID
-      const createdObj = txResult.objectChanges?.find((change: any) => change.type === 'created' && change.objectType.includes('EncryptedResource'));
-      const resourceObjectId = createdObj ? (createdObj as any).objectId : "Unknown";
-
-      console.log(" Resource Object ID created:", resourceObjectId);
-      alert(`Note saved! SUI Object ID required for test decryption: ${resourceObjectId}`);
+      const createdObj = txResult.objectChanges?.find(
+        (change: { type: string; objectType?: string }) =>
+          change.type === "created" && change.objectType?.includes("EncryptedResource")
+      );
+      const resourceObjectId = createdObj
+        ? (createdObj as { objectId: string }).objectId
+        : null;
 
       setContent("");
       onSuccess?.();
+
+      toast.success("Note saved", {
+        description: "Encrypted and stored on Walrus. Minted on Sui.",
+        action: resourceObjectId
+          ? {
+              label: "View on Explorer",
+              onClick: () =>
+                window.open(
+                  buildExplorerUrl(resourceObjectId, "object"),
+                  "_blank"
+                ),
+            }
+          : undefined,
+      });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to save note");
+      const msg = err instanceof Error ? err.message : "Failed to save note";
+      setError(msg);
+      toast.error("Could not save note", { description: msg });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="note-content">Content</Label>
+        <Label
+          htmlFor="note-content"
+          className="text-[11px] font-bold uppercase tracking-wider text-slate-500"
+        >
+          Content
+        </Label>
         <Textarea
           id="note-content"
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Strategy: They want to invest $50K"
+          placeholder="e.g. Strategy: They want to invest $50K"
           rows={4}
           disabled={loading}
+          className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white resize-none text-[#1a1a1a] placeholder:text-slate-400"
         />
       </div>
       <div className="space-y-2">
-        <Label>Access level</Label>
+        <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          Access level
+        </Label>
         <Select
           value={String(accessLevel)}
           onValueChange={(v) => setAccessLevel(Number(v) as OrgRole)}
           disabled={loading}
         >
-          <SelectTrigger>
+          <SelectTrigger className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white h-11">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -157,9 +168,24 @@ export function NoteEditorForm({
           </SelectContent>
         </Select>
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={loading || !content.trim()}>
-        {loading ? "Saving…" : "Save Note"}
+      {error && (
+        <Alert variant="destructive" className="rounded-xl">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <Button
+        type="submit"
+        disabled={loading || !content.trim()}
+        className="w-full h-12 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+      >
+        {loading ? (
+          <>
+            <Loader2 className="size-5 animate-spin" />
+            Encrypting & minting…
+          </>
+        ) : (
+          "Save note"
+        )}
       </Button>
     </form>
   );

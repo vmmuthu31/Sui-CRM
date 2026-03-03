@@ -1,8 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import {
+  MessageSquare,
+  Phone,
+  Calendar,
+  MoreHorizontal,
+  Loader2,
+  Send,
+} from "lucide-react";
 import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
+import { toast } from "sonner";
 import CONTRACT_CONFIG from "@/lib/config/contracts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +19,9 @@ import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import {
   Select,
@@ -21,25 +30,56 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 interface ProfileInteractionsProps {
   profileId: string;
 }
 
 const interactionTypes = [
-  { value: "message", label: "Message" },
-  { value: "call", label: "Call" },
-  { value: "meeting", label: "Meeting" },
-  { value: "other", label: "Other" },
+  { value: "message", label: "Message", icon: MessageSquare },
+  { value: "call", label: "Call", icon: Phone },
+  { value: "meeting", label: "Meeting", icon: Calendar },
+  { value: "other", label: "Other", icon: MoreHorizontal },
 ];
 
-// Placeholder list; replace with API /api/profiles/:id/interactions
-const mockInteractions: { type: string; message: string; createdAt: string }[] =
-  [];
+// Placeholder; replace with API /api/profiles/:id/interactions
+const mockInteractions: {
+  type: string;
+  message: string;
+  createdAt: string;
+}[] = [];
+
+function formatDate(iso: string) {
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const sameDay =
+      d.getDate() === now.getDate() &&
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear();
+    if (sameDay) {
+      return d.toLocaleTimeString(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    }
+    return d.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+}
 
 export function ProfileInteractions({ profileId }: ProfileInteractionsProps) {
   const account = useCurrentAccount();
-  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const { mutateAsync: signAndExecuteTransaction } =
+    useSignAndExecuteTransaction();
   const [type, setType] = useState("message");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -60,7 +100,7 @@ export function ProfileInteractions({ profileId }: ProfileInteractionsProps) {
     try {
       const tx = new Transaction();
       const timestamp = Math.floor(Date.now() / 1000);
-      const action = `${type}: ${message}`;
+      const action = `${type}: ${message.trim()}`;
       tx.moveCall({
         target: CONTRACT_CONFIG.FUNCTIONS.INTERACTION.LOG_INTERACTION,
         arguments: [
@@ -71,67 +111,160 @@ export function ProfileInteractions({ profileId }: ProfileInteractionsProps) {
       });
       await signAndExecuteTransaction({ transaction: tx });
       setMessage("");
+      toast.success("Interaction logged", {
+        description: "Recorded on-chain.",
+      });
     } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : "Failed to log interaction",
-      );
+      const msg =
+        err instanceof Error ? err.message : "Failed to log interaction";
+      setError(msg);
+      toast.error("Could not log interaction", { description: msg });
     } finally {
       setLoading(false);
     }
   };
 
+  const currentTypeMeta = interactionTypes.find((t) => t.value === type);
+  const TypeIcon = currentTypeMeta?.icon ?? MessageSquare;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Interactions</CardTitle>
-        <CardDescription>
-          Manual logs and onchain activity (unified timeline from indexer).
-        </CardDescription>
+    <Card className="border-none shadow-xl shadow-slate-900/5 bg-white rounded-[32px] overflow-hidden">
+      <div className="h-1.5 w-full flex">
+        <div className="h-full flex-1 bg-slate-400 rounded-bl-full" />
+        <div className="h-full flex-1 bg-slate-500" />
+        <div className="h-full flex-1 bg-slate-600 rounded-br-full" />
+      </div>
+      <CardHeader className="p-8 pb-4">
+        <div className="flex items-center gap-4">
+          <div className="size-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 shadow-sm">
+            <MessageSquare className="size-7 stroke-[1.5]" />
+          </div>
+          <div>
+            <Badge className="bg-slate-100 text-slate-600 border-none px-2.5 py-0.5 font-bold text-[10px] uppercase tracking-widest mb-1.5">
+              On-chain
+            </Badge>
+            <CardTitle className="text-2xl font-black text-[#1a1a1a] tracking-tight">
+              Interactions
+            </CardTitle>
+            <CardDescription className="text-slate-500 font-medium mt-0.5">
+              Manual logs and activity. Timeline from indexer when wired.
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <form onSubmit={handleLog} className="space-y-4 rounded-lg border p-4">
-          <div className="space-y-2">
-            <Label>Type</Label>
-            <Select value={type} onValueChange={setType} disabled={loading}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {interactionTypes.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <CardContent className="p-8 pt-2 space-y-8">
+        <form
+          onSubmit={handleLog}
+          className="rounded-2xl border border-slate-100 bg-slate-50/50 p-6 space-y-5"
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                Type
+              </Label>
+              <Select
+                value={type}
+                onValueChange={setType}
+                disabled={loading}
+              >
+                <SelectTrigger className="rounded-xl border-slate-200 bg-white h-11">
+                  <span className="flex items-center gap-2">
+                    <TypeIcon className="size-4 text-slate-500" />
+                    <SelectValue />
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  {interactionTypes.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      <span className="flex items-center gap-2">
+                        <t.icon className="size-4" />
+                        {t.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 sm:col-span-2 sm:col-end-2">
+              <Label
+                htmlFor="interaction-message"
+                className="text-[11px] font-bold uppercase tracking-wider text-slate-500"
+              >
+                Message
+              </Label>
+              <Input
+                id="interaction-message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="e.g. Sent DM about token launch"
+                disabled={loading}
+                className="rounded-xl border-slate-200 bg-white h-11"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="interaction-message">Message</Label>
-            <Input
-              id="interaction-message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="e.g. Sent DM about token launch"
-              disabled={loading}
-            />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" disabled={loading || !account}>
-            {loading ? "Logging…" : "Log Interaction"}
+          {error && (
+            <Alert variant="destructive" className="rounded-xl">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <Button
+            type="submit"
+            disabled={loading || !account}
+            className="h-12 px-6 rounded-xl font-bold bg-[#1a1a1a] hover:bg-black text-white gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="size-5 animate-spin" />
+                Logging…
+              </>
+            ) : (
+              <>
+                <Send className="size-4" />
+                Log interaction
+              </>
+            )}
           </Button>
         </form>
+
         {mockInteractions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No interactions yet. Onchain activity will appear here when indexer
-            is wired.
-          </p>
+          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/30 py-14 text-center">
+            <div className="size-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-slate-300 mb-3">
+              <Calendar className="size-7" />
+            </div>
+            <h3 className="font-bold text-[#1a1a1a]">No interactions yet</h3>
+            <p className="text-sm text-slate-500 mt-1 max-w-[260px]">
+              Log a touchpoint above. On-chain activity will appear here when
+              the indexer is connected.
+            </p>
+          </div>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {mockInteractions.map((i, idx) => (
-              <li key={idx} className="rounded-md border p-3 text-sm">
-                <span className="font-medium capitalize">{i.type}</span>
-                <p className="text-muted-foreground">{i.message}</p>
-                <p className="text-xs text-muted-foreground">{i.createdAt}</p>
+              <li
+                key={idx}
+                className="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
+              >
+                <div className="size-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+                  {(() => {
+                    const meta = interactionTypes.find((t) => t.value === i.type);
+                    const Icon = meta?.icon ?? MoreHorizontal;
+                    return <Icon className="size-5" />;
+                  })()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <Badge
+                    variant="secondary"
+                    className="bg-slate-100 text-slate-600 border-0 text-[10px] font-bold uppercase tracking-wider capitalize"
+                  >
+                    {i.type}
+                  </Badge>
+                  <p className="mt-1.5 text-sm font-medium text-[#1a1a1a]">
+                    {i.message}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {formatDate(i.createdAt)}
+                  </p>
+                </div>
               </li>
             ))}
           </ul>
