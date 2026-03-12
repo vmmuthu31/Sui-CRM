@@ -63,7 +63,7 @@ export async function createSponsoredTransaction(
 
   const body: Record<string, any> = {
     network: SUI_NETWORK,
-    transactionKindBytes: input.transactionKindBytes,
+    transactionBlockKindBytes: input.transactionKindBytes,
     sender: input.sender,
   };
   if (input.allowedMoveCallTargets?.length) {

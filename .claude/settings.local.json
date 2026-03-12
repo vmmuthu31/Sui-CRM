@@ -14,7 +14,21 @@
       "Bash(npm install:*)",
       "Bash(cat /Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/app/\\\\\\(dashboard\\\\\\)/organization/team/page.tsx | head -3)",
       "WebFetch(domain:resend.com)",
-      "WebFetch(domain:postmarkapp.com)"
+      "WebFetch(domain:postmarkapp.com)",
+      "WebFetch(domain:docs.sui.io)",
+      "Bash(node -e \"const p = require\\('/Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/node_modules/@mysten/sui/package.json'\\); console.log\\('version:', p.version\\);\")",
+      "Bash(node -e \"\nconst fs = require\\('fs'\\);\n// Check what signTransaction returns in @mysten/sui v2.x\nconst keypairPath = '/Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/node_modules/@mysten/sui/dist/cjs/keypairs/ed25519/keypair.js';\nif \\(fs.existsSync\\(keypairPath\\)\\) {\n  const content = fs.readFileSync\\(keypairPath, 'utf8'\\);\n  // Find signTransaction method\n  const idx = content.indexOf\\('signTransaction'\\);\n  console.log\\(content.substring\\(idx, idx + 500\\)\\);\n}\n\")",
+      "WebFetch(domain:sdk.mystenlabs.com)",
+      "Bash(grep -r \"executeTransactionBlock\\\\|executeTransaction\" /Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/node_modules/@mysten/sui/dist/jsonRpc/ --include=\"*.mjs\" -l 2>/dev/null | head -5)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(grep -n \"getSuiClient\\\\|SuiJsonRpcClient\\\\|getClient\" /Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/lib/config/sui.ts 2>/dev/null || find /Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/lib/config -name \"*.ts\" 2>/dev/null | xargs head -30 2>/dev/null)",
+      "Bash(grep -n \"parseTransaction\\\\b\\\\|\\\\$kind\\\\|FailedTransaction\" /Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/node_modules/@mysten/sui/src/jsonRpc/core.ts | head -20)",
+      "Bash(grep -r \"ENOKI_SECRET_KEY\" /Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/.env* 2>/dev/null | grep -v \".env.example\")",
+      "Bash(grep -n \"FailedTransaction\\\\|\\\\$kind\" /Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/node_modules/@mysten/sui/src/jsonRpc/core.ts 2>/dev/null | head -20)",
+      "Bash(grep -rn \"prover.*mystenlabs\\\\|prover-dev\\\\|PROVER_URL\" /Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/ --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.env*\" 2>/dev/null | grep -v node_modules)",
+      "Bash(grep -rn \"initializeSession\\\\|ZkLoginService.init\" /Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/ --include=\"*.ts\" --include=\"*.tsx\" 2>/dev/null | grep -v node_modules)",
+      "Bash(gh api:*)",
+      "Bash(sed -n '118,130p' /Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/node_modules/@mysten/sui/src/transactions/Transaction.ts && sed -n '669,680p' /Users/kaushikk/Documents/Products/Sui-CRM/Sui-CRM/web/node_modules/@mysten/sui/src/transactions/Transaction.ts)"
     ]
   }
 }

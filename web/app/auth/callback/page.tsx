@@ -64,6 +64,9 @@ export default function AuthCallbackPage() {
         const address = ZkLoginService.getZkLoginAddress(jwtToken, salt);
 
         // 5. Persist proof
+        console.log("[ZkCallback] salt:", salt, "sub:", decodedJWT.sub, "aud:", Array.isArray(decodedJWT.aud) ? decodedJWT.aud[0] : decodedJWT.aud);
+        console.log("[ZkCallback] proof structure:", { keys: Object.keys(zkProof), issBase64Details: zkProof.issBase64Details, headerBase64: zkProof.headerBase64, proofPointsKeys: zkProof.proofPoints ? Object.keys(zkProof.proofPoints) : null });
+        console.log("[ZkCallback] derived address:", address);
         SessionManager.saveProof({
           zkProof,
           jwtToken,

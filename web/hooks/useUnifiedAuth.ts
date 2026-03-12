@@ -18,8 +18,6 @@ export interface UnifiedAccount {
  * Returns the currently active account from either provider:
  * - Wallet (dapp-kit): when user has connected their Sui wallet
  * - ZK Login: when user has signed in with Google and SessionManager has proof
- *
- * Use this so UI and transaction flows work the same for both auth methods.
  */
 export function useUnifiedAccount(): UnifiedAccount {
   const dappAccount = useCurrentAccount();
@@ -36,11 +34,14 @@ export function useUnifiedAccount(): UnifiedAccount {
 }
 
 /**
- * Sign and execute a Sui transaction using whichever provider is active:
- * - Wallet: uses dapp-kit's signAndExecuteTransaction (wallet extension signs)
- * - ZK Login: uses SessionManager proof + ZkLoginService (same flow as sponsored tx signing)
+ * Sign and execute a Sui transaction using whichever provider is active.
  *
- * Return shape matches dapp-kit: { digest: string } so existing forms work unchanged.
+ * For ZK Login users this uses the direct RPC path:
+ *   1. Validate the ZK session hasn't expired (epoch check)
+ *   2. Build the full transaction (with gas from user's address)
+ *   3. Sign with the ephemeral keypair
+ *   4. Wrap in a ZK Login signature
+ *   5. Submit via sui_executeTransactionBlock
  */
 export function useUnifiedSignAndExecuteTransaction(): {
   signAndExecuteTransaction: (params: { transaction: Transaction }) => Promise<{ digest: string }>;
@@ -52,23 +53,43 @@ export function useUnifiedSignAndExecuteTransaction(): {
     async (params: { transaction: Transaction }): Promise<{ digest: string }> => {
       const { transaction: tx } = params;
 
+      // ── Wallet (dapp-kit) path ────────────────────────────────────────────
       if (authMode === "wallet") {
         const result = await dappSignAndExecute({ transaction: tx });
         return { digest: result.digest };
       }
 
-      if (authMode === "zk" && address) {
-        const proof = SessionManager.getProof();
-        if (!proof) {
-          throw new Error("ZK Login session expired. Please sign in again.");
+      // ── ZK Login path — follows the official Mysten ZK Login guide ──────────
+      const proof = SessionManager.getProof();
+      if (proof) {
+        console.log("[ZkLogin] proof found, address:", proof.address, "maxEpoch:", proof.maxEpoch);
+
+        const client = getSuiClient();
+
+        // 1. Epoch validity check
+        try {
+          const sysState = await client.getLatestSuiSystemState();
+          const currentEpoch = Number(sysState.epoch);
+          console.log("[ZkLogin] epoch check — maxEpoch:", proof.maxEpoch, "currentEpoch:", currentEpoch);
+          if (proof.maxEpoch < currentEpoch) {
+            SessionManager.clearProof();
+            throw new Error(
+              `ZK Login session expired (max epoch ${proof.maxEpoch}, current ${currentEpoch}). Please sign in again.`
+            );
+          }
+        } catch (epochErr: any) {
+          if (epochErr.message?.includes("ZK Login session expired")) throw epochErr;
+          console.warn("[ZkLogin] epoch check skipped (RPC error):", epochErr.message);
         }
 
-        tx.setSender(proof.address);
-        const client = getSuiClient();
+        // 2. Rebuild ephemeral keypair
         const keypair = ZkLoginService.recreateKeyPair(proof.ephemeralPrivateKey);
-        const txBytes = await tx.build({ client });
-        const { signature: userSignature } = await keypair.signTransaction(txBytes);
 
+        // 3. Set sender and sign — official pattern: tx.sign({ client, signer })
+        tx.setSender(proof.address);
+        const { bytes, signature: userSignature } = await tx.sign({ client, signer: keypair });
+
+        // 4. Build ZK Login signature — spread partialZkLoginSignature + addressSeed
         const zkLoginSignature = ZkLoginService.createTransactionSignature(
           proof.zkProof,
           proof.maxEpoch,
@@ -77,13 +98,23 @@ export function useUnifiedSignAndExecuteTransaction(): {
           proof.userSalt
         );
 
+        // 5. Execute — pass base64 bytes directly to executeTransactionBlock
+        console.log("[ZkLogin] submitting transaction...");
         const result = await client.executeTransactionBlock({
-          transactionBlock: txBytes,
-          signature: zkLoginSignature,
-          options: { showEffects: true, showEvents: true },
+          transactionBlock: bytes,
+          signature: [zkLoginSignature],
+          options: { showEffects: true },
         });
+        console.log("[ZkLogin] result:", result);
 
-        return { digest: result.digest };
+        const digest = result.digest;
+        if (!digest) throw new Error("Transaction failed — no digest returned.");
+
+        if (result.effects?.status?.status === "failure") {
+          throw new Error(`Transaction failed on-chain: ${result.effects.status.error}`);
+        }
+
+        return { digest };
       }
 
       throw new Error("No active account. Connect a wallet or sign in with ZK Login.");

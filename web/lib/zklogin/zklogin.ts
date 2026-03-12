@@ -6,6 +6,7 @@ import {
     getZkLoginSignature,
     genAddressSeed,
     computeZkLoginAddressFromSeed,
+    getExtendedEphemeralPublicKey,
 } from "@mysten/sui/zklogin";
 import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { jwtDecode } from "jwt-decode";
@@ -109,7 +110,7 @@ export class ZkLoginService {
 
         const proofRequest = {
             jwt: params.jwtToken,
-            extendedEphemeralPublicKey: params.ephemeralKeyPair.getPublicKey().toSuiPublicKey(),
+            extendedEphemeralPublicKey: getExtendedEphemeralPublicKey(params.ephemeralKeyPair.getPublicKey()),
             maxEpoch: params.maxEpoch,
             jwtRandomness: params.randomness,
             salt: salt,
@@ -152,16 +153,23 @@ export class ZkLoginService {
             aud
         ).toString();
 
-        // Prepare inputs as expected by `@mysten/sui/zklogin`
+        console.log("[ZkLoginSig] inputs:", {
+            userSalt,
+            sub: decodedJWT.sub,
+            aud,
+            addressSeed,
+            maxEpoch,
+            hasProofPoints: !!zkProof?.proofPoints,
+            proofKeys: zkProof ? Object.keys(zkProof) : [],
+            proofPointsKeys: zkProof?.proofPoints ? Object.keys(zkProof.proofPoints) : [],
+            issBase64Details: zkProof?.issBase64Details,
+            headerBase64: zkProof?.headerBase64,
+        });
+
+        // Spread the prover response directly (official pattern: { ...partialZkLoginSignature, addressSeed })
         const zkInputs = {
-            proofPoints: {
-                a: zkProof.proofPoints.a,
-                b: zkProof.proofPoints.b,
-                c: zkProof.proofPoints.c,
-            },
-            issBase64Details: zkProof.issBase64Details,
-            headerBase64: zkProof.headerBase64,
-            addressSeed: addressSeed,
+            ...zkProof,
+            addressSeed,
         };
 
         return getZkLoginSignature({

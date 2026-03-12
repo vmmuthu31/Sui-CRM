@@ -114,7 +114,13 @@ export default function OnboardingPage() {
       });
       router.replace("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Failed to create organization.");
+      const msg: string = err.message || "Failed to create organization.";
+      console.error("[CreateOrg] error:", msg, err);
+      setError(msg);
+      // Only auto-redirect on confirmed epoch expiry
+      if (msg.includes("ZK Login session expired")) {
+        setTimeout(() => router.replace("/login"), 3000);
+      }
     } finally {
       setLoading(false);
     }
