@@ -18,7 +18,7 @@
 - `encryptionService.ts` — `encryptAndUploadResource()` (Seal + Walrus pipeline)
 - `decryptionService.ts` — `downloadAndDecryptResources()` (verify access + decrypt locally)
 - `walrusService.ts` — `storeBlob()`, `fetchBlob()` (50+ publisher/aggregator fallback)
-- `zklogin.service.ts` — `ZkLoginService.fetchZkProof()`, `createTransactionSignature()` (proof generation)
+- `zklogin.service.ts` — `ZkLoginService` (nonce/proof from Enoki, address from Enoki's addressSeed) [UPDATED 2026-03-15]
 
 ### Config (`web/lib/config/`)
 - `contracts.ts` — Package ID, registries, `CRM_SPONSORED_TARGETS` (11 whitelisted Move targets), gas budgets
@@ -26,8 +26,8 @@
 - `api.ts` — API endpoint URLs
 
 ### ZkLogin (`web/lib/zklogin/`)
-- `zklogin.ts` — `ZkLoginService` (ephemeral keypairs, prover calls, address computation)
-- `session.ts` — `SessionManager` (localStorage session/proof cache with 24h TTL)
+- `zklogin.ts` — `ZkLoginService` (Enoki nonce + ZKP, address from Enoki's addressSeed, signature caching) [REWRITTEN 2026-03-15]
+- `session.ts` — `SessionManager` (localStorage session/proof cache with 24h TTL, auto-expiry)
 
 ### Components (`web/components/`)
 - `contacts/` — Profile UI, notes editor, profile-notes.tsx

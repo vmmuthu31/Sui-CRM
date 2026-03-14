@@ -1,7 +1,7 @@
 # Sui CRM - Central Documentation Index
 
-**Last Updated:** 2026-03-14
-**Status:** Composable gas sponsorship via Enoki implemented ✅
+**Last Updated:** 2026-03-15
+**Status:** Enoki-native zkLogin + gas sponsorship FIXED ✅ (was: broken with "expired" error)
 
 ## 🎯 Quick Start
 
@@ -30,18 +30,27 @@
 
 ---
 
-## 🚀 Latest Changes (2026-03-14)
+## 🚀 Latest Changes (2026-03-15)
 
-**Problem:** zkLogin users had to pay gas despite Enoki gas pool existing.
+**Problem:** "Enoki execute error (400): expired" on sponsored transaction execution.
 
-**Solution:** Implemented composable sponsored transactions.
+**Root Cause:** Mismatch between nonce/proof endpoints (Enoki) and address derivation (local salt). Enoki's Groth16 proof cryptographically tied to its addressSeed, not local salt.
+
+**Solution:** Full Enoki-native zkLogin flow:
+- Nonce from Enoki `/v1/zklogin/nonce`
+- ZK Proof from Enoki `/v1/zklogin/zkp`
+- Address from Enoki's `addressSeed` in proof (not local salt)
+- 24h cache TTL on proofs
 
 **Files Changed:**
-1. `web/lib/config/contracts.ts` — Added `CRM_SPONSORED_TARGETS` (11 whitelisted Move targets)
-2. `web/hooks/useSponsoredTransaction.ts` — Made composable, defaults targets to `CRM_SPONSORED_TARGETS`
-3. `web/hooks/useUnifiedAuth.ts` — Added `useUnifiedTransaction()` hook (routes wallet→direct, zkLogin→sponsored)
+1. `web/.env` — Added NEXT_PUBLIC_ENOKI_API_KEY, NEXT_PUBLIC_ENOKI_NONCE_URL, NEXT_PUBLIC_ENOKI_ZKP_URL
+2. `web/lib/zklogin/zklogin.ts` — Rewrote to use Enoki endpoints for nonce + ZKP
+3. `web/lib/zklogin/session.ts` — Added 24h cache TTL
+4. `web/app/auth/callback/page.tsx` — Use Enoki's addressSeed for address
+5. `web/hooks/useSponsoredTransaction.ts` — Use cache pattern for signatures
 
-**Result:** zkLogin users now get 100% free gas; wallet users unaffected.
+**Result:** Sponsored transactions now work end-to-end; no "expired" errors.
+**Note:** Users get NEW addresses (Enoki's addressSeed). On-chain data from old addresses must be recreated.
 
 ---
 
@@ -51,8 +60,9 @@
 1. Create Enoki account at https://portal.enoki.mystenlabs.com
 2. Deposit SUI into gas pool (org manager does this)
 3. Get `ENOKI_SECRET_KEY` from portal
-4. Add to `.env.local`: `ENOKI_SECRET_KEY=...`
+4. Add to `.env.local`: `ENOKI_SECRET_KEY=...`, `NEXT_PUBLIC_ENOKI_API_KEY=...`, `NEXT_PUBLIC_ENOKI_NONCE_URL=...`, `NEXT_PUBLIC_ENOKI_ZKP_URL=...`
 5. Whitelist 11 CRM Move targets in portal (see [Checklist](#-enoki-portal-checklist))
+6. Leave "Allowed Addresses" empty (open policy) or add specific zkLogin addresses
 
 ### The Question: "Do I Paste My Private Key?"
 **NO.** You don't paste your private key anywhere.
@@ -73,15 +83,18 @@ Gas deducted from your pool ✅
 
 **No payment to Enoki:** You fund the pool once, gas is deducted as txs are sponsored.
 
-### What Happens Behind the Scenes
-1. zkLogin user builds transaction
-2. Backend calls: `POST https://api.enoki.mystenlabs.com/v1/transaction-blocks/sponsor`
+### What Happens Behind the Scenes (2026-03-15 flow)
+1. User logs in with Google → Enoki generates nonce + ZK proof → address from Enoki's addressSeed
+2. zkLogin user builds transaction
+3. Backend calls: `POST https://api.enoki.mystenlabs.com/v1/transaction-blocks/sponsor`
    - Authorization: `Bearer ENOKI_SECRET_KEY`
+   - zklogin-jwt header: User's JWT (so Enoki context is consistent)
    - Body: Move call targets must be in allowlist
-3. Enoki returns sponsored tx bytes
-4. Frontend signs with ephemeral key
-5. Backend submits: `POST https://api.enoki.mystenlabs.com/v1/transaction-blocks/sponsor/{digest}`
-6. Enoki broadcasts onchain
+4. Enoki returns sponsored tx bytes
+5. Frontend signs with ephemeral key + creates zkLogin sig from cached proof
+6. Backend submits: `POST https://api.enoki.mystenlabs.com/v1/transaction-blocks/sponsor/{digest}`
+   - Signature: Full zkLogin signature (ephemeral sig + ZK proof + addressSeed from Enoki)
+7. Enoki broadcasts onchain
 
 ---
 

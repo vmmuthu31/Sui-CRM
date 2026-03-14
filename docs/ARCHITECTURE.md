@@ -37,9 +37,9 @@
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐
-│  Walrus Network  │    │  Seal Threshold  │    │  Mysten ZKP      │
-│  (Decentralized  │    │  Encryption (4   │    │  Prover Service  │
-│  Storage)        │    │  key servers)    │    │  (Proof Gen)     │
+│  Walrus Network  │    │  Seal Threshold  │    │  Enoki API       │
+│  (Decentralized  │    │  Encryption (4   │    │  (Nonce, ZKP,    │
+│  Storage)        │    │  key servers)    │    │  Gas Sponsor)    │
 └──────────────────┘    └──────────────────┘    └──────────────────┘
 ```
 
@@ -54,11 +54,11 @@
 
 ### ZkLogin (Google OAuth)
 - **File:** `web/lib/providers/ZkLoginProvider.tsx`
-- **Function:** Password-less Web3 via Google OAuth + Mysten prover
-- **Auth flow:** Google login → ephemeral keypair generated → ZK proof → Sui address derived
-- **Session:** Cached 24h in localStorage via `SessionManager`
-- **Gas handling:** Enoki sponsors all gas via org's gas pool (2026-03-14 update)
-- **Signature:** zkLogin signature (ephemeral sig + ZK proof + JWT claims)
+- **Function:** Password-less Web3 via Google OAuth + Enoki zkLogin APIs
+- **Auth flow:** Google login → ephemeral keypair generated → Enoki nonce + ZKP → Sui address derived from Enoki's addressSeed
+- **Session:** Cached 24h in localStorage via `SessionManager` (auto-expires after 24h)
+- **Gas handling:** Enoki sponsors all gas via org's gas pool (fully integrated 2026-03-15)
+- **Signature:** zkLogin signature (ephemeral sig + ZK proof from Enoki + JWT claims)
 
 ### Unified Auth Hook
 - **File:** `web/hooks/useUnifiedAuth.ts`

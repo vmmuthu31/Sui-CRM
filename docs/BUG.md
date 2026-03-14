@@ -7,7 +7,7 @@ type: project
 # Bug: Onboarding UX Issue
 
 ## Issue
-After implementing sponsored transactions (2026-03-14), zkLogin users no longer need SUI for gas. However, the onboarding page (`web/app/onboarding/page.tsx`) still displays:
+After implementing sponsored transactions (2026-03-14) and fixing the "expired" bug (2026-03-15), zkLogin users no longer need SUI for gas. However, the onboarding page (`web/app/onboarding/page.tsx`) still displays:
 - "Step 1: Fund your wallet"
 - Faucet link to get testnet SUI
 - Balance check
