@@ -30,6 +30,8 @@ export interface CreateSponsoredTxInput {
   transactionKindBytes: string;
   /** The sender's Sui address (the zkLogin user's derived address) */
   sender: string;
+  /** JWT token for zkLogin users — sent as zklogin-jwt header so Enoki can bind the sponsored tx to the session */
+  jwtToken?: string;
   /** Optional: restrict which Move call targets are permitted */
   allowedMoveCallTargets?: string[];
   /** Optional: restrict which Sui addresses can appear in the transaction */
@@ -73,12 +75,17 @@ export async function createSponsoredTransaction(
     body.allowedAddresses = input.allowedAddresses;
   }
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${ENOKI_SECRET_KEY}`,
+  };
+  if (input.jwtToken) {
+    headers["zklogin-jwt"] = input.jwtToken;
+  }
+
   const response = await fetch(`${ENOKI_API_BASE}/transaction-blocks/sponsor`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${ENOKI_SECRET_KEY}`,
-    },
+    headers,
     body: JSON.stringify(body),
   });
 

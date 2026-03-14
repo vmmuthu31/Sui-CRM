@@ -17,7 +17,7 @@ import { createSponsoredTransaction } from "@/lib/services/enoki.service";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { transactionKindBytes, sender, allowedMoveCallTargets, allowedAddresses } = body;
+    const { transactionKindBytes, sender, jwtToken, allowedMoveCallTargets, allowedAddresses } = body;
 
     if (!transactionKindBytes || !sender) {
       return NextResponse.json(
@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     const result = await createSponsoredTransaction({
       transactionKindBytes,
       sender,
+      jwtToken,
       allowedMoveCallTargets,
       allowedAddresses,
     });

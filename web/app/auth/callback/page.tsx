@@ -50,7 +50,7 @@ export default function AuthCallbackPage() {
           salt = Math.abs(hashVal).toString();
         }
 
-        // 3. Generate ZK proof
+        // 3. Generate ZK proof via Enoki
         const ephemeralKeyPair = ZkLoginService.recreateKeyPair(session.ephemeralPrivateKey);
         const zkProof = await ZkLoginService.fetchZkProof({
           jwtToken,
@@ -60,12 +60,15 @@ export default function AuthCallbackPage() {
           userSalt: salt,
         });
 
-        // 4. Compute Sui address
-        const address = ZkLoginService.getZkLoginAddress(jwtToken, salt);
+        // 4. Compute Sui address — use Enoki's addressSeed if present
+        const address = ZkLoginService.getZkLoginAddress(
+          jwtToken,
+          salt,
+          zkProof.addressSeed // Enoki's addressSeed (proof is cryptographically tied to it)
+        );
 
         // 5. Persist proof
-        console.log("[ZkCallback] salt:", salt, "sub:", decodedJWT.sub, "aud:", Array.isArray(decodedJWT.aud) ? decodedJWT.aud[0] : decodedJWT.aud);
-        console.log("[ZkCallback] proof structure:", { keys: Object.keys(zkProof), issBase64Details: zkProof.issBase64Details, headerBase64: zkProof.headerBase64, proofPointsKeys: zkProof.proofPoints ? Object.keys(zkProof.proofPoints) : null });
+        console.log("[ZkCallback] proof source: Enoki ZKP", { hasAddressSeed: !!zkProof.addressSeed });
         console.log("[ZkCallback] derived address:", address);
         SessionManager.saveProof({
           zkProof,

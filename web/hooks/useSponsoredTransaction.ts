@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { Transaction } from "@mysten/sui/transactions";
-import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { toBase64, fromBase64 } from "@mysten/sui/utils";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { SessionManager } from "@/lib/zklogin/session";
 import { ZkLoginService } from "@/lib/zklogin/zklogin";
 import { CRM_SPONSORED_TARGETS } from "@/lib/config/contracts";
@@ -19,17 +19,8 @@ interface SponsorState {
  * A hook for submitting Sui transactions where the gas is paid by the
  * organization's Enoki gas pool — not the user.
  *
- * Usage (inside any dashboard component):
- *
- *   const { sponsorAndExecute, isSponsoring, error } = useSponsoredTransaction();
- *
- *   const handleCreateProfile = async () => {
- *     const tx = new Transaction();
- *     tx.moveCall({ target: CONTRACT_FUNCTIONS.PROFILE.CREATE_PROFILE, arguments: [...] });
- *
- *     const digest = await sponsorAndExecute(tx);
- *     console.log("tx digest:", digest);
- *   };
+ * Uses Enoki's full flow: nonce + ZKP from Enoki endpoints, sponsored
+ * execution via backend API routes, and Enoki's addressSeed for signatures.
  */
 export function useSponsoredTransaction(
   injectedProof?: ReturnType<typeof SessionManager.getProof>
@@ -62,7 +53,7 @@ export function useSponsoredTransaction(
         // Build transaction KIND bytes only (Enoki will wrap them with gas & sender)
         const network = (process.env.NEXT_PUBLIC_SUI_NETWORK as "testnet" | "mainnet" | "devnet") || "testnet";
         const client = new SuiJsonRpcClient({
-          url: process.env.NEXT_PUBLIC_SUI_RPC_URL || "https://fullnode.testnet.sui.io:443",
+          url: process.env.NEXT_PUBLIC_SUI_RPC_URL || `https://fullnode.${network}.sui.io:443`,
           network,
         });
         const txKindBytes = await tx.build({ client, onlyTransactionKind: true });
@@ -75,6 +66,7 @@ export function useSponsoredTransaction(
           body: JSON.stringify({
             transactionKindBytes: txKindBytesB64,
             sender: proof.address,
+            jwtToken: proof.jwtToken,
             allowedMoveCallTargets: options?.allowedMoveCallTargets ?? CRM_SPONSORED_TARGETS,
             allowedAddresses: options?.allowedAddresses,
           }),
@@ -92,14 +84,11 @@ export function useSponsoredTransaction(
         const { signature: ephemeralSignature } =
           await ephemeralKeyPair.signTransaction(sponsoredTxBytes);
 
-        // Step 3: Build the full zkLogin signature (ephemeral sig + ZK proof)
-        const zkLoginSignature = ZkLoginService.createTransactionSignature(
-          proof.zkProof,
-          proof.maxEpoch,
+        // Step 3: Build the full zkLogin signature using cached proof data
+        const zkLoginSignature = ZkLoginService.getTransactionSignature({
           ephemeralSignature,
-          proof.jwtToken,
-          proof.userSalt
-        );
+          useCache: true,
+        });
 
         // Step 4: Submit the zkLogin signature to Enoki to broadcast on-chain
         const executeRes = await fetch(`/api/sponsor/${digest}`, {

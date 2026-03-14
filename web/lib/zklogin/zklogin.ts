@@ -1,24 +1,13 @@
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import {
-    generateNonce,
-    generateRandomness,
     jwtToAddress,
     getZkLoginSignature,
     genAddressSeed,
     computeZkLoginAddressFromSeed,
-    getExtendedEphemeralPublicKey,
 } from "@mysten/sui/zklogin";
-import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { jwtDecode } from "jwt-decode";
 import { SessionManager } from "./session";
 
-const NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK as "testnet" | "mainnet" | "devnet") || "testnet";
-const RPC_URL = process.env.NEXT_PUBLIC_SUI_RPC_URL || `https://fullnode.${NETWORK}.sui.io:443`;
-
-// Mysten's ZK prover — testnet uses prover-dev, mainnet uses prover
-const PROVER_URL = NETWORK === "mainnet"
-    ? "https://prover.mystenlabs.com/v1"
-    : "https://prover-dev.mystenlabs.com/v1";
 const OAUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 
 export interface DecodedJWT {
@@ -31,36 +20,47 @@ export interface DecodedJWT {
 }
 
 /**
- * Core zkLogin Utility Setup for Sui-CRM
- * Designed to be clean, unintegrated, and isolated.
+ * Core zkLogin Utility for Sui-CRM
+ *
+ * Uses Enoki API endpoints for nonce + ZKP generation (consistent with
+ * Enoki's sponsored transaction flow). This avoids Mode A/B mismatches
+ * that occur when mixing Mysten's prover with Enoki's sponsorship.
  */
 export class ZkLoginService {
     /**
-     * Initializes a new secure zkLogin session.
-     * - Generates an ephemeral key pair
-     * - Sets a max epoch (usually current epoch + 2)
-     * - Generates randomness & nonce
-     * - Saves everything to the SessionManager
+     * Initializes a new secure zkLogin session using Enoki's nonce endpoint.
+     * - Generates an ephemeral keypair
+     * - Calls Enoki /v1/zklogin/nonce to get nonce, maxEpoch, randomness
+     * - Saves everything to SessionManager
      */
     static async initializeSession() {
-        // 1. Generate new ephemeral keypair
         const ephemeralKeyPair = new Ed25519Keypair();
 
-        // 2. Fetch the real current epoch from Sui so the ZK proof is valid
-        const suiClient = new SuiJsonRpcClient({ url: RPC_URL, network: NETWORK });
-        const { epoch } = await suiClient.getLatestSuiSystemState();
-        const currentEpoch = Number(epoch);
-        const maxEpoch = currentEpoch + 10; // valid for ~10 epochs (~10 hours on testnet)
+        // Enoki expects the Sui public key format (with Ed25519 flag byte)
+        const ephemeralPublicKey = ephemeralKeyPair.getPublicKey().toSuiPublicKey();
 
-        // 3. Generate randomness and nonce
-        const randomness = generateRandomness();
-        const nonce = generateNonce(
-            ephemeralKeyPair.getPublicKey(),
-            maxEpoch,
-            randomness
-        );
+        const nonceRes = await fetch(process.env.NEXT_PUBLIC_ENOKI_NONCE_URL!, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${process.env.NEXT_PUBLIC_ENOKI_API_KEY}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                network: process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet",
+                ephemeralPublicKey,
+                additionalEpochs: 2,
+            }),
+        });
 
-        // 4. Save to local storage before redirecting
+        if (!nonceRes.ok) {
+            const errText = await nonceRes.text();
+            throw new Error(`Enoki nonce error (${nonceRes.status}): ${errText}`);
+        }
+
+        const { data } = await nonceRes.json();
+        const { nonce, randomness, maxEpoch } = data;
+
+        // Save to localStorage before OAuth redirect
         SessionManager.saveSession({
             ephemeralPrivateKey: ephemeralKeyPair.getSecretKey(),
             randomness,
@@ -95,45 +95,53 @@ export class ZkLoginService {
     }
 
     /**
-     * Fetches the Zero Knowledge Proof from Mysten's Prover endpoint.
+     * Fetches the ZK proof from Enoki's ZKP endpoint.
+     *
+     * Unlike Mysten's prover, Enoki's endpoint:
+     *  - Uses the public API key + zklogin-jwt header (not raw salt)
+     *  - Returns addressSeed in the proof (cryptographically bound)
+     *  - Ensures consistency with Enoki's sponsored transaction flow
      */
     static async fetchZkProof(params: {
         jwtToken: string;
         ephemeralKeyPair: Ed25519Keypair;
         randomness: string;
         maxEpoch: number;
-        userSalt: string;
+        userSalt: string; // kept for fallback but Enoki manages salt internally
     }) {
-        // Determine user salt. Needs a backend salt service ideally,
-        // but here we demonstrate a client-side hardcoded or derived one for template purposes
-        const salt = params.userSalt;
+        const ephemeralPublicKey = params.ephemeralKeyPair.getPublicKey().toSuiPublicKey();
 
-        const proofRequest = {
-            jwt: params.jwtToken,
-            extendedEphemeralPublicKey: getExtendedEphemeralPublicKey(params.ephemeralKeyPair.getPublicKey()),
-            maxEpoch: params.maxEpoch,
-            jwtRandomness: params.randomness,
-            salt: salt,
-            keyClaimName: "sub",
-        };
-
-        const response = await fetch(PROVER_URL, {
+        const response = await fetch(process.env.NEXT_PUBLIC_ENOKI_ZKP_URL!, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(proofRequest),
+            headers: {
+                Authorization: `Bearer ${process.env.NEXT_PUBLIC_ENOKI_API_KEY}`,
+                "Content-Type": "application/json",
+                "zklogin-jwt": params.jwtToken,
+            },
+            body: JSON.stringify({
+                network: process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet",
+                ephemeralPublicKey,
+                maxEpoch: params.maxEpoch,
+                randomness: params.randomness,
+            }),
         });
 
         if (!response.ok) {
-            throw new Error(`ZKP Service error: ${response.status}`);
+            const errText = await response.text();
+            throw new Error(`Enoki ZKP error (${response.status}): ${errText}`);
         }
 
-        const proof = await response.json();
-        return proof;
+        const json = await response.json();
+        // Enoki wraps the proof in a `data` field
+        return json.data || json;
     }
 
     /**
-     * Combines the User Signature (signed by ephemeral key) with the ZK Proof to
-     * form the final zkLogin Signature submitted to the Sui network.
+     * Combines the ephemeral signature with the ZK proof to form the final
+     * zkLogin signature submitted to the Sui network.
+     *
+     * CRITICAL: Uses Enoki's addressSeed from the proof (not locally computed).
+     * The Groth16 proof is cryptographically tied to Enoki's addressSeed.
      */
     static createTransactionSignature(
         zkProof: any,
@@ -145,44 +153,92 @@ export class ZkLoginService {
         const decodedJWT = jwtDecode<DecodedJWT>(jwtToken);
         const aud = Array.isArray(decodedJWT.aud) ? decodedJWT.aud[0] : decodedJWT.aud;
 
-        // Address seed is mathematically derived from salt, claim names, claim val, and aud.
-        const addressSeed = genAddressSeed(
-            BigInt(userSalt),
-            "sub",
-            decodedJWT.sub,
-            aud
-        ).toString();
+        // Extract only proof components (not addressSeed — we'll set it explicitly)
+        const partialZkProof = {
+            proofPoints: zkProof.proofPoints,
+            issBase64Details: zkProof.issBase64Details,
+            headerBase64: zkProof.headerBase64,
+        };
 
-        console.log("[ZkLoginSig] inputs:", {
-            userSalt,
-            sub: decodedJWT.sub,
-            aud,
-            addressSeed,
-            maxEpoch,
-            hasProofPoints: !!zkProof?.proofPoints,
-            proofKeys: zkProof ? Object.keys(zkProof) : [],
-            proofPointsKeys: zkProof?.proofPoints ? Object.keys(zkProof.proofPoints) : [],
-            issBase64Details: zkProof?.issBase64Details,
-            headerBase64: zkProof?.headerBase64,
-        });
+        // Use Enoki's addressSeed if present (proof is cryptographically tied to it).
+        // Fall back to local computation only if Enoki didn't provide one.
+        let addressSeed: string;
+        if (zkProof.addressSeed) {
+            addressSeed = zkProof.addressSeed;
+        } else {
+            addressSeed = genAddressSeed(
+                BigInt(userSalt),
+                "sub",
+                decodedJWT.sub,
+                aud
+            ).toString();
+        }
 
-        // Spread the prover response directly (official pattern: { ...partialZkLoginSignature, addressSeed })
         const zkInputs = {
-            ...zkProof,
+            ...partialZkProof,
             addressSeed,
         };
 
         return getZkLoginSignature({
             inputs: zkInputs,
-            maxEpoch: maxEpoch,
+            maxEpoch,
             userSignature: ephemeralSignature,
         });
     }
 
     /**
-     * Decodes a JWT and computes the Sui zkLogin Address.
+     * Convenience wrapper that creates a transaction signature using cached proof data.
      */
-    static getZkLoginAddress(jwtToken: string, userSalt: string): string {
+    static getTransactionSignature(params: {
+        ephemeralSignature: string | Uint8Array;
+        useCache?: boolean;
+        zkProof?: any;
+        maxEpoch?: number;
+        jwtToken?: string;
+        userSalt?: string;
+    }): string {
+        if (params.useCache) {
+            const cached = SessionManager.getProof();
+            if (!cached || !cached.jwtToken || !cached.userSalt) {
+                throw new Error("No cached proof available. Please log in again.");
+            }
+            return this.createTransactionSignature(
+                cached.zkProof,
+                cached.maxEpoch,
+                params.ephemeralSignature as string,
+                cached.jwtToken,
+                cached.userSalt
+            );
+        }
+
+        if (!params.zkProof || !params.maxEpoch || !params.jwtToken || !params.userSalt) {
+            throw new Error("Missing required parameters for signature creation");
+        }
+
+        return this.createTransactionSignature(
+            params.zkProof,
+            params.maxEpoch,
+            params.ephemeralSignature as string,
+            params.jwtToken,
+            params.userSalt
+        );
+    }
+
+    /**
+     * Computes the zkLogin address.
+     *
+     * If an Enoki addressSeed is available, uses it (consistent with the proof).
+     * Otherwise falls back to jwtToAddress with local salt.
+     */
+    static getZkLoginAddress(jwtToken: string, userSalt: string, addressSeed?: string): string {
+        if (addressSeed) {
+            const decodedJWT = jwtDecode<DecodedJWT>(jwtToken);
+            return computeZkLoginAddressFromSeed(
+                BigInt(addressSeed),
+                decodedJWT.iss,
+                false
+            );
+        }
         return jwtToAddress(jwtToken, userSalt, false);
     }
 }

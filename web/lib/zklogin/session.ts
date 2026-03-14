@@ -21,10 +21,13 @@ export interface CachedProofData {
     maxEpoch: number;
     randomness: string;
     ephemeralPrivateKey: string;
+    createdAt?: number;
+    expiresAt?: number;
 }
 
 const SESSION_KEY = "suicrm-zklogin-session";
 const PROOF_KEY = "suicrm-zklogin-proof";
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 export class SessionManager {
     static saveSession(session: ZkLoginSessionData) {
@@ -45,16 +48,35 @@ export class SessionManager {
         }
     }
 
-    static saveProof(proofData: CachedProofData) {
+    static saveProof(proofData: Omit<CachedProofData, "createdAt" | "expiresAt">) {
         if (typeof window !== "undefined") {
-            localStorage.setItem(PROOF_KEY, JSON.stringify(proofData));
+            const now = Date.now();
+            const data: CachedProofData = {
+                ...proofData,
+                createdAt: now,
+                expiresAt: now + CACHE_TTL,
+            };
+            localStorage.setItem(PROOF_KEY, JSON.stringify(data));
         }
     }
 
     static getProof(): CachedProofData | null {
         if (typeof window === "undefined") return null;
         const data = localStorage.getItem(PROOF_KEY);
-        return data ? JSON.parse(data) : null;
+        if (!data) return null;
+
+        try {
+            const parsed: CachedProofData = JSON.parse(data);
+            // Expire stale proofs
+            if (parsed.expiresAt && Date.now() > parsed.expiresAt) {
+                this.clearProof();
+                return null;
+            }
+            return parsed;
+        } catch {
+            this.clearProof();
+            return null;
+        }
     }
 
     static clearProof() {
