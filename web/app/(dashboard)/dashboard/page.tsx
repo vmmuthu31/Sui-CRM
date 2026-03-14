@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useUser } from "@/hooks/useUser";
 import {
   Building2,
   Users,
@@ -30,8 +31,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 type WidgetId = 'org' | 'contacts' | 'quickstart';
 
 export default function DashboardPage() {
+  const { user } = useUser();
   const [order, setOrder] = useState<WidgetId[]>(['org', 'contacts', 'quickstart']);
   const [dragging, setDragging] = useState<WidgetId | null>(null);
+  const [memberCount, setMemberCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user?.suiAddress) return;
+    fetch(`/api/invites?adminAddress=${user.suiAddress}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const accepted = (data.invites ?? []).filter((i: any) => i.status === "accepted").length;
+        setMemberCount(accepted);
+      })
+      .catch(() => setMemberCount(null));
+  }, [user?.suiAddress]);
 
   const handleDragStart = (id: WidgetId) => {
     setDragging(id);
@@ -135,7 +149,9 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <Badge className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-none px-3 py-1 font-black text-[10px] uppercase tracking-widest mb-1.5">Enterprise</Badge>
-                        <CardTitle className="text-3xl font-black text-[#1a1a1a] tracking-tight leading-tight">Organization</CardTitle>
+                        <CardTitle className="text-3xl font-black text-[#1a1a1a] tracking-tight leading-tight">
+                          {user?.orgName ?? "Organization"}
+                        </CardTitle>
                       </div>
                     </div>
                     <div className="cursor-grab active:cursor-grabbing p-3 rounded-2xl hover:bg-slate-50 text-slate-300 hover:text-slate-500 transition-all">
@@ -157,16 +173,20 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="pt-8 border-t border-slate-50 flex justify-between">
-                    {[
-                      { l: "Groups", v: "03" },
-                      { l: "Engineers", v: "12" },
-                      { l: "Admins", v: "04" }
-                    ].map((s, i) => (
-                      <div key={i} className="flex flex-col items-center">
-                        <span className="text-xl font-black text-[#1a1a1a]">{s.v}</span>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{s.l}</span>
-                      </div>
-                    ))}
+                    <div className="flex flex-col items-center">
+                      <span className="text-xl font-black text-[#1a1a1a]">
+                        {memberCount !== null ? memberCount : "—"}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Members</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-xl font-black text-[#1a1a1a]">{user?.role === "admin" ? "Admin" : "Member"}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Your Role</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-xl font-black text-[#1a1a1a]">{user?.hasOrg ? "Active" : "—"}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</span>
+                    </div>
                   </div>
                 </div>
               </Card>

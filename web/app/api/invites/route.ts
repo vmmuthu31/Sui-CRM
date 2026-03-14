@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { getDb, type InviteRecord } from "@/lib/mongodb";
 import { randomUUID } from "crypto";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM || "noreply@suicrm.app";
 const APP_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
+
+function createTransporter() {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
+
+const FROM = process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@suicrm.app";
 
 // POST /api/invites — admin sends an invite
 export async function POST(req: NextRequest) {
@@ -45,9 +57,10 @@ export async function POST(req: NextRequest) {
 
     const inviteUrl = `${APP_URL}/invite/${token}`;
 
-    // Send invite email
-    await resend.emails.send({
-      from: FROM,
+    // Send invite email via NodeMailer
+    const transporter = createTransporter();
+    await transporter.sendMail({
+      from: `"Sui CRM" <${FROM}>`,
       to: inviteeEmail,
       subject: `${adminName} invited you to join ${orgName} on Sui CRM`,
       html: buildInviteEmail({ inviteeName, adminName, orgName, inviteUrl }),
