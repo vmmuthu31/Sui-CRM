@@ -5,23 +5,47 @@ import Link from "next/link";
 import {
   Building2, Users, UserPlus, Mail, Clock, CheckCircle2,
   Send, Settings, ShieldCheck, Crown, User, RefreshCw,
+  UserMinus, Loader2, AlertTriangle,
 } from "lucide-react";
+import { Transaction } from "@mysten/sui/transactions";
 import { useUser } from "@/hooks/useUser";
+import { useUnifiedTransaction } from "@/hooks/useUnifiedAuth";
 import { CreateOrganizationForm } from "@/components/forms/create-organization-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import CONTRACT_CONFIG from "@/lib/config/contracts";
 
+const ROLE_OPTIONS = [
+  { value: "viewer", label: "Viewer (read-only)", onchainRole: 1 },
+  { value: "member", label: "Manager (read + write)", onchainRole: 2 },
+  { value: "manager", label: "Manager (read + write)", onchainRole: 2 },
+  { value: "admin", label: "Admin (full control)", onchainRole: 3 },
+] as const;
+
+function roleToOnchain(role: string): number {
+  return ROLE_OPTIONS.find((r) => r.value === role)?.onchainRole ?? 2;
+}
+
+function roleLabel(role: string): string {
+  if (role === "viewer") return "Viewer";
+  if (role === "admin") return "Admin";
+  return "Manager";
+}
 
 export default function OrganizationPage() {
   const { user, loading } = useUser();
+  const { execute: signAndExecuteTransaction } = useUnifiedTransaction();
   const [invites, setInvites] = useState<any[]>([]);
   const [loadingInvites, setLoadingInvites] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteeName, setInviteeName] = useState("");
   const [inviteeEmail, setInviteeEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("member");
   const [sending, setSending] = useState(false);
+  const [registeringMember, setRegisteringMember] = useState<string | null>(null);
+  const [removingMember, setRemovingMember] = useState<string | null>(null);
 
   const isAdmin = user?.role === "admin";
   const hasOrg = user?.hasOrg;
@@ -54,11 +78,12 @@ export default function OrganizationPage() {
           orgName: user.orgName,
           inviteeName: inviteeName.trim(),
           inviteeEmail: inviteeEmail.trim(),
+          role: inviteRole,
         }),
       });
       if (res.ok) {
         toast.success(`Invite sent to ${inviteeEmail}!`);
-        setInviteeName(""); setInviteeEmail(""); setShowInviteForm(false);
+        setInviteeName(""); setInviteeEmail(""); setInviteRole("member"); setShowInviteForm(false);
         fetchInvites();
       } else {
         const d = await res.json();
@@ -68,6 +93,97 @@ export default function OrganizationPage() {
       toast.error("Failed to send invite. Please try again.");
     } finally {
       setSending(false);
+    }
+  };
+
+  // Register member on-chain via add_org_member
+  const handleRegisterOnChain = async (invite: any) => {
+    if (!user?.orgRegistryId || !invite.memberAddress) {
+      toast.error("Missing org registry or member address");
+      return;
+    }
+    setRegisteringMember(invite.token);
+    try {
+      const tx = new Transaction();
+      tx.moveCall({
+        target: CONTRACT_CONFIG.FUNCTIONS.ACCESS_CONTROL.ADD_ORG_MEMBER,
+        arguments: [
+          tx.object(user.orgRegistryId),
+          tx.pure.address(invite.memberAddress),
+          tx.pure.u8(roleToOnchain(invite.role || "member")),
+        ],
+      });
+
+      await signAndExecuteTransaction({ transaction: tx });
+
+      // Mark member as on-chain registered
+      await fetch("/api/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          suiAddress: invite.memberAddress,
+          onchainRegistered: true,
+        }),
+      });
+
+      toast.success(`${invite.inviteeName} registered on-chain`);
+      fetchInvites();
+    } catch (err) {
+      toast.error("On-chain registration failed", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+    } finally {
+      setRegisteringMember(null);
+    }
+  };
+
+  // Remove member: on-chain + DB cleanup
+  const handleRemoveMember = async (invite: any) => {
+    if (!user?.orgRegistryId || !invite.memberAddress) {
+      toast.error("Missing org registry or member address");
+      return;
+    }
+    setRemovingMember(invite.token);
+    try {
+      const tx = new Transaction();
+      tx.moveCall({
+        target: CONTRACT_CONFIG.FUNCTIONS.ACCESS_CONTROL.REMOVE_ORG_MEMBER,
+        arguments: [
+          tx.object(user.orgRegistryId),
+          tx.pure.address(invite.memberAddress),
+        ],
+      });
+
+      await signAndExecuteTransaction({ transaction: tx });
+
+      // Clean up member's DB record
+      await fetch("/api/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          suiAddress: invite.memberAddress,
+          hasOrg: false,
+          orgAdminAddress: "",
+          orgRegistryId: "",
+          onchainRegistered: false,
+        }),
+      });
+
+      // Update invite status
+      await fetch(`/api/invites/${invite.token}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "removed" }),
+      });
+
+      toast.success(`${invite.inviteeName} removed from organization`);
+      fetchInvites();
+    } catch (err) {
+      toast.error("Failed to remove member", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+    } finally {
+      setRemovingMember(null);
     }
   };
 
@@ -118,6 +234,10 @@ export default function OrganizationPage() {
   const members = invites.filter((i) => i.status === "accepted");
   const pending = invites.filter((i) => i.status === "pending");
 
+  // Check which members need on-chain registration
+  const needsRegistration = (invite: any) =>
+    invite.memberAddress && !invite.onchainRegistered;
+
   return (
     <div className="max-w-[1200px] mx-auto space-y-8">
 
@@ -160,7 +280,7 @@ export default function OrganizationPage() {
         )}
       </div>
 
-      {/* Invite form (admin only) */}
+      {/* Invite form (admin only) — now with role selection */}
       {showInviteForm && isAdmin && (
         <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-black/5 p-8">
           <div className="flex items-center gap-3 mb-6">
@@ -173,7 +293,7 @@ export default function OrganizationPage() {
             </div>
           </div>
           <form onSubmit={handleSendInvite} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Full Name</label>
                 <input
@@ -190,6 +310,18 @@ export default function OrganizationPage() {
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-[#1a1a1a] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
                 />
               </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Role</label>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-[#1a1a1a] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
+                >
+                  <option value="viewer">Viewer (read-only)</option>
+                  <option value="member">Manager (read + write)</option>
+                  <option value="admin">Admin (full control)</option>
+                </select>
+              </div>
             </div>
             <div className="flex items-center gap-3 pt-2">
               <button
@@ -197,7 +329,7 @@ export default function OrganizationPage() {
                 className="flex items-center gap-2 h-11 px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {sending
-                  ? <><span className="size-4 rounded-full border-2 border-indigo-300 border-t-white animate-spin" />Sending…</>
+                  ? <><span className="size-4 rounded-full border-2 border-indigo-300 border-t-white animate-spin" />Sending...</>
                   : <><Send className="size-4" />Send Invite</>
                 }
               </button>
@@ -290,20 +422,63 @@ export default function OrganizationPage() {
                 <p className="text-xs text-slate-400 mt-0.5">Invite your team using the button above.</p>
               </li>
             ) : (
-              members.map((invite) => (
-                <li key={invite.token} className="flex items-center gap-4 px-8 py-5 hover:bg-slate-50/50 transition-colors">
-                  <div className="size-10 rounded-2xl bg-emerald-50 flex items-center justify-center shrink-0">
-                    <User className="size-4 text-emerald-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-[#1a1a1a]">{invite.inviteeName}</p>
-                    <p className="text-xs text-slate-400">{invite.inviteeEmail}</p>
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg border text-emerald-600 bg-emerald-50 border-emerald-100">
-                    <CheckCircle2 className="size-3" /> Member
-                  </span>
-                </li>
-              ))
+              members.map((invite) => {
+                const isRegistering = registeringMember === invite.token;
+                const isRemoving = removingMember === invite.token;
+                const unregistered = needsRegistration(invite);
+
+                return (
+                  <li key={invite.token} className="flex items-center gap-4 px-8 py-5 hover:bg-slate-50/50 transition-colors">
+                    <div className={`size-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                      unregistered ? "bg-amber-50" : "bg-emerald-50"
+                    }`}>
+                      {unregistered
+                        ? <AlertTriangle className="size-4 text-amber-500" />
+                        : <User className="size-4 text-emerald-600" />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-[#1a1a1a]">{invite.inviteeName}</p>
+                      <p className="text-xs text-slate-400">{invite.inviteeEmail}</p>
+                      {invite.memberAddress && (
+                        <p className="text-[10px] font-mono text-slate-300 mt-0.5 truncate">
+                          {invite.memberAddress.slice(0, 10)}...{invite.memberAddress.slice(-6)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {unregistered ? (
+                        <button
+                          onClick={() => handleRegisterOnChain(invite)}
+                          disabled={isRegistering || !user?.orgRegistryId}
+                          className="inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100 transition-colors disabled:opacity-50"
+                        >
+                          {isRegistering
+                            ? <Loader2 className="size-3 animate-spin" />
+                            : <ShieldCheck className="size-3" />
+                          }
+                          {isRegistering ? "Registering..." : "Register On-Chain"}
+                        </button>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg border text-emerald-600 bg-emerald-50 border-emerald-100">
+                          <CheckCircle2 className="size-3" /> {roleLabel(invite.role || "member")}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => handleRemoveMember(invite)}
+                        disabled={isRemoving || !invite.memberAddress}
+                        className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-30"
+                        title="Remove member"
+                      >
+                        {isRemoving
+                          ? <Loader2 className="size-4 animate-spin" />
+                          : <UserMinus className="size-4" />
+                        }
+                      </button>
+                    </div>
+                  </li>
+                );
+              })
             )}
           </ul>
         </div>
@@ -331,7 +506,7 @@ export default function OrganizationPage() {
                 </div>
                 <div className="text-right shrink-0">
                   <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg border text-amber-600 bg-amber-50 border-amber-200">
-                    <Clock className="size-3" /> Pending
+                    <Clock className="size-3" /> Pending ({roleLabel(invite.role || "member")})
                   </span>
                   <p className="text-[10px] text-slate-400 mt-1">
                     Sent {new Date(invite.createdAt).toLocaleDateString()}
