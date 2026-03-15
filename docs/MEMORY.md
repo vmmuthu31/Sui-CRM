@@ -1,25 +1,27 @@
 # Sui CRM - Central Documentation Index
 
 **Last Updated:** 2026-03-15
-**Status:** Enoki-native zkLogin + gas sponsorship FIXED ✅ (was: broken with "expired" error)
+**Status:** Phase 2 member access implemented; Seal member decryption 403 UNRESOLVED
 
-## 🎯 Quick Start
+## Quick Start
 
 ### For New Sessions
 1. Read **[ARCHITECTURE.md](ARCHITECTURE.md)** — System design, data flows, dual auth
 2. Skim **[TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)** — One-liner codebase map
 3. For implementation → **[IMPLEMENTATION_AND_USERFLOW.md](IMPLEMENTATION_AND_USERFLOW.md)**
 4. For bugs → **[BUG.md](BUG.md)**
+5. For handover → **[HANDOVER.md](HANDOVER.md)** — Phase 2 changes, active bugs, debugging steps
 
 ### Quick Answers
 - **"How do sponsored transactions work?"** → See [How Enoki Sponsorship Works](#how-enoki-sponsorship-works)
-- **"What changed?"** → See [Latest Changes (2026-03-14)](#latest-changes-2026-03-14)
+- **"What changed in Phase 2?"** → See [Latest Changes (2026-03-15)](#latest-changes-2026-03-15)
+- **"Why can't members decrypt?"** → See [BUG.md — BUG-002](BUG.md) and [HANDOVER.md — Active Bug](HANDOVER.md)
 - **"How do I add a new onchain action?"** → Read TECHNICAL_ARCHITECTURE.md - Critical Paths
 - **"Is there a bug?"** → Check [BUG.md](BUG.md)
 
 ---
 
-## 📚 Documentation Map
+## Documentation Map
 
 | File | Purpose | When to Read |
 |------|---------|--------------|
@@ -27,112 +29,68 @@
 | **TECHNICAL_ARCHITECTURE.md** | One-liner codebase reference, file map, critical paths | Finding specific files, planning features |
 | **IMPLEMENTATION_AND_USERFLOW.md** | User journeys + roadmap (Phases 1-6) | Understanding user flows, verifying features |
 | **BUG.md** | Known issues, severity, fixes | Debugging, UX planning |
+| **HANDOVER.md** | Phase 2 changes, active bug details, debugging steps | Picking up where last session left off |
 
 ---
 
-## 🚀 Latest Changes (2026-03-15)
+## Latest Changes (2026-03-15)
+
+### Phase 2: Member Access & Org Management
+
+**What was implemented:**
+1. Members see admin's contacts (query by `orgAdminAddress`)
+2. `orgRegistryId` propagated to members during invite acceptance + useUser fallback
+3. Admin can register members on-chain via org page ("Register On-Chain" button)
+4. Admin can remove members (on-chain `remove_org_member` + DB cleanup)
+5. Role selection in invite flow (Viewer / Manager / Admin)
+6. Old invites without `memberAddress` are backfilled from user records
+7. Decryption service: validation for empty `resource_id`, retry logic, debug logging
+
+**What's broken:**
+- Member Seal decryption 403 — see BUG.md BUG-002
+- Member cannot decrypt notes/files even after on-chain registration
+
+**Files changed:**
+- `web/app/(dashboard)/contacts/page.tsx`
+- `web/app/(dashboard)/organization/page.tsx`
+- `web/app/api/contacts/route.ts`
+- `web/app/api/invites/[token]/route.ts`
+- `web/app/api/invites/route.ts`
+- `web/app/api/users/route.ts`
+- `web/app/auth/callback/page.tsx`
+- `web/hooks/useUser.ts`
+- `web/lib/mongodb.ts`
+- `web/lib/services/decryptionService.ts`
+
+### Previous: Enoki zkLogin Fix (2026-03-15 earlier)
 
 **Problem:** "Enoki execute error (400): expired" on sponsored transaction execution.
-
-**Root Cause:** Mismatch between nonce/proof endpoints (Enoki) and address derivation (local salt). Enoki's Groth16 proof cryptographically tied to its addressSeed, not local salt.
-
-**Solution:** Full Enoki-native zkLogin flow:
-- Nonce from Enoki `/v1/zklogin/nonce`
-- ZK Proof from Enoki `/v1/zklogin/zkp`
-- Address from Enoki's `addressSeed` in proof (not local salt)
-- 24h cache TTL on proofs
-
-**Files Changed:**
-1. `web/.env` — Added NEXT_PUBLIC_ENOKI_API_KEY, NEXT_PUBLIC_ENOKI_NONCE_URL, NEXT_PUBLIC_ENOKI_ZKP_URL
-2. `web/lib/zklogin/zklogin.ts` — Rewrote to use Enoki endpoints for nonce + ZKP
-3. `web/lib/zklogin/session.ts` — Added 24h cache TTL
-4. `web/app/auth/callback/page.tsx` — Use Enoki's addressSeed for address
-5. `web/hooks/useSponsoredTransaction.ts` — Use cache pattern for signatures
-
-**Result:** Sponsored transactions now work end-to-end; no "expired" errors.
-**Note:** Users get NEW addresses (Enoki's addressSeed). On-chain data from old addresses must be recreated.
+**Root Cause:** Mismatch between nonce/proof endpoints (Enoki) and address derivation (local salt).
+**Solution:** Full Enoki-native zkLogin flow with Enoki's addressSeed.
+**Result:** Sponsored transactions work end-to-end.
 
 ---
 
-## 💰 How Enoki Sponsorship Works
+## How Enoki Sponsorship Works
 
 ### Setup (One-Time)
 1. Create Enoki account at https://portal.enoki.mystenlabs.com
-2. Deposit SUI into gas pool (org manager does this)
+2. Deposit SUI into gas pool
 3. Get `ENOKI_SECRET_KEY` from portal
-4. Add to `.env.local`: `ENOKI_SECRET_KEY=...`, `NEXT_PUBLIC_ENOKI_API_KEY=...`, `NEXT_PUBLIC_ENOKI_NONCE_URL=...`, `NEXT_PUBLIC_ENOKI_ZKP_URL=...`
-5. Whitelist 11 CRM Move targets in portal (see [Checklist](#-enoki-portal-checklist))
-6. Leave "Allowed Addresses" empty (open policy) or add specific zkLogin addresses
+4. Add to `.env.local`
+5. Whitelist 11 CRM Move targets in portal
+6. Leave "Allowed Addresses" empty
 
-### The Question: "Do I Paste My Private Key?"
-**NO.** You don't paste your private key anywhere.
-
-**How it works:**
+### Flow
 ```
-Your Wallet
-    ↓ (You deposit SUI upfront)
-Enoki Gas Pool
-    ↓ (Backend uses ENOKI_SECRET_KEY API key, not private key)
-Backend calls Enoki API
-    ↓
-Enoki signs tx with THEIR keys
-    ↓
-Tx broadcasts onchain
-Gas deducted from your pool ✅
+User builds tx → Backend calls Enoki create → Enoki returns sponsored bytes
+→ Frontend signs with ephemeral key → Backend calls Enoki execute
+→ Enoki broadcasts on-chain → Gas from org pool
 ```
-
-**No payment to Enoki:** You fund the pool once, gas is deducted as txs are sponsored.
-
-### What Happens Behind the Scenes (2026-03-15 flow)
-1. User logs in with Google → Enoki generates nonce + ZK proof → address from Enoki's addressSeed
-2. zkLogin user builds transaction
-3. Backend calls: `POST https://api.enoki.mystenlabs.com/v1/transaction-blocks/sponsor`
-   - Authorization: `Bearer ENOKI_SECRET_KEY`
-   - zklogin-jwt header: User's JWT (so Enoki context is consistent)
-   - Body: Move call targets must be in allowlist
-4. Enoki returns sponsored tx bytes
-5. Frontend signs with ephemeral key + creates zkLogin sig from cached proof
-6. Backend submits: `POST https://api.enoki.mystenlabs.com/v1/transaction-blocks/sponsor/{digest}`
-   - Signature: Full zkLogin signature (ephemeral sig + ZK proof + addressSeed from Enoki)
-7. Enoki broadcasts onchain
 
 ---
 
-## 🔄 Auth Routing
-
-### Wallet Users (dapp-kit)
-```
-Connect Wallet → Sign Transaction → User pays gas
-```
-
-### ZkLogin Users (Google OAuth)
-```
-Sign in with Google → Ephemeral keypair + ZK proof → Enoki sponsors gas → Free ✅
-```
-
-**Both routed via:** `useUnifiedTransaction()` hook in `web/hooks/useUnifiedAuth.ts`
-
----
-
-## 📋 Enoki Portal Checklist
-
-- [ ] Create account at portal.enoki.mystenlabs.com (testnet)
-- [ ] Deposit SUI (minimum 1 SUI for testing)
-- [ ] Add all 11 Move call targets to "Allowed Move Call Targets":
-  ```
-  0xd867...::org::create_org
-  0xd867...::crm_access_control::{all 10 functions}
-  0xd867...::profile::create_profile
-  0xd867...::interaction_log::log_interaction
-  ```
-- [ ] (Optional) Set "Allowed Addresses"
-- [ ] Get ENOKI_SECRET_KEY
-- [ ] Add to `.env.local`
-- [ ] Verify: `curl http://localhost:3000/api/sponsor/status` → `{ configured: true }`
-
----
-
-## 🔑 Key Addresses (Testnet)
+## Key Addresses (Testnet)
 
 | Item | Address |
 |------|---------|
@@ -143,16 +101,15 @@ Sign in with Google → Ephemeral keypair + ZK proof → Enoki sponsors gas → 
 
 ---
 
-## 👥 System Overview
+## System Overview
 
 - **Project:** Sui-CRM — privacy-first Web3 CRM (E2E encryption via Seal, decentralized storage via Walrus, password-less auth via zkLogin)
 - **Tech Stack:** Next.js 14+, React 19, TypeScript, @mysten/sui, Seal, Walrus
 - **Network:** Testnet (mainnet pending)
-- **Status:** Composable gas sponsorship + encrypted notes/files ✅
 
 ---
 
-## 🔗 References
+## References
 - Enoki: https://docs.enoki.mystenlabs.com
 - Sui: https://docs.sui.io
 - Seal: https://github.com/mystenlabs/seal-sdk

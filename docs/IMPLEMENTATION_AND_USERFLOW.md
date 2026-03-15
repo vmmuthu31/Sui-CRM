@@ -139,6 +139,60 @@ Result: Standard Web3 experience ✅
 
 ---
 
+## Phase 4B: Member Access & Org Management (2026-03-15)
+
+### Step 8: Admin Registers Member On-Chain
+```
+User Action: Org page → Click "Register On-Chain" next to member
+Frontend → Sui: Call crm_access_control::add_org_member()
+   - Args: OrgAccessRegistry, memberAddress, role (1=Viewer, 2=Manager, 3=Admin)
+Sui: Adds member to OrgAccessRegistry.members table
+Frontend → MongoDB: PATCH /api/users { onchainRegistered: true }
+Result: Member can now pass Seal's seal_approve check ✅
+```
+
+### Step 9: Member Views Admin's Contacts
+```
+User Action: Member logs in → Navigates to Contacts
+Frontend: Detects role === "member", uses orgAdminAddress as queryAddress
+Frontend → API: GET /api/contacts?adminAddress={orgAdminAddress}
+API: Returns admin's contacts
+Result: Member sees org's contacts ✅
+```
+
+### Step 10: Member Decrypts Note/File
+```
+User Action: Member clicks "Decrypt & View" on a note
+Frontend: Uses orgRegistryId (propagated from admin's record)
+Frontend → Seal: Creates SessionKey, signs personal message
+Frontend → Seal: seal_approve(resource, orgRegistry, profileRegistry)
+Seal: Verifies member is in OrgAccessRegistry with sufficient role
+Seal: Returns decryption key shares
+Frontend: Decrypts content locally
+Result: Note visible to member ✅
+⚠️ STATUS: Seal 403 — member decryption still fails (see BUG.md BUG-002)
+```
+
+### Step 11: Admin Removes Member
+```
+User Action: Org page → Click remove icon next to member
+Frontend → Sui: Call crm_access_control::remove_org_member()
+Frontend → MongoDB: Clean up member's hasOrg, orgAdminAddress, orgRegistryId
+Frontend → MongoDB: Update invite status to "removed"
+Result: Member removed from org ✅
+```
+
+### Step 12: Role Selection in Invite
+```
+User Action: Org page → "Invite Member" → Select role dropdown
+Frontend → API: POST /api/invites { role: "viewer" | "member" | "admin" }
+API: Saves role on invite record
+Later: Admin registers member on-chain with corresponding role number
+Result: Granular role control ✅
+```
+
+---
+
 ## Phase 5: Dynamic Context & Interaction Tracking
 
 ### Proposed Implementation
@@ -169,11 +223,17 @@ Result: Standard Web3 experience ✅
 
 ## Implementation Checklist
 
-- [ ] Phase 1: Organization setup (✅ Complete)
-- [ ] Phase 2: Profile management (✅ Complete)
-- [ ] Phase 3: Walrus integration (✅ Complete)
-- [ ] Phase 3: Seal encryption (✅ Complete)
-- [ ] Phase 4: Gas sponsorship via Enoki (✅ Complete - 2026-03-14)
+- [x] Phase 1: Organization setup
+- [x] Phase 2: Profile management
+- [x] Phase 3: Walrus integration
+- [x] Phase 3: Seal encryption
+- [x] Phase 4: Gas sponsorship via Enoki (2026-03-14)
+- [x] Phase 4B: Member contacts visibility (2026-03-15)
+- [x] Phase 4B: orgRegistryId propagation to members (2026-03-15)
+- [x] Phase 4B: On-chain member registration UI (2026-03-15)
+- [x] Phase 4B: Remove member (2026-03-15)
+- [x] Phase 4B: Role selection in invite flow (2026-03-15)
+- [ ] Phase 4B: Member Seal decryption — **BLOCKED** (Seal 403, see BUG.md BUG-002)
 - [ ] Phase 5: Dynamic context & interaction logging
 - [ ] Phase 6: Bot ecosystem & enrichment
 - [ ] Phase 6: Engagement tracking
