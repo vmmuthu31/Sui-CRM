@@ -32,6 +32,7 @@ export interface UserRecord {
   orgName?: string;           // cached from onboarding
   orgRegistryId?: string;     // on-chain OrgAccessRegistry object ID
   orgAdminAddress?: string;   // for members: points to their admin's suiAddress
+  onchainRegistered?: boolean; // whether member is registered on-chain in OrgAccessRegistry
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,8 +45,9 @@ export interface InviteRecord {
   orgName: string;
   inviteeName: string;
   inviteeEmail: string;
-  role: "member";
-  status: "pending" | "accepted" | "expired";
+  role: "viewer" | "member" | "manager" | "admin";
+  status: "pending" | "accepted" | "expired" | "removed";
+  memberAddress?: string;     // populated after invite is accepted
   expiresAt: Date;
   createdAt: Date;
 }
