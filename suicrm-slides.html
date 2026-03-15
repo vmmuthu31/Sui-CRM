@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUI CRM — Pitch Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ─── Reset ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── viewport-base.css ─── */
+html, body { height: 100%; overflow-x: hidden; }
+html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+
+.slide {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.slide-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-height: 100%;
+    overflow: hidden;
+    padding: var(--slide-padding);
+}
+
+:root {
+    --title-size: clamp(1.8rem, 5vw, 4.2rem);
+    --h2-size: clamp(1.3rem, 3.2vw, 2.5rem);
+    --h3-size: clamp(0.9rem, 2vw, 1.35rem);
+    --body-size: clamp(0.72rem, 1.3vw, 0.95rem);
+    --small-size: clamp(0.62rem, 1vw, 0.8rem);
+    --slide-padding: clamp(1.5rem, 4vw, 5rem);
+    --content-gap: clamp(0.75rem, 1.8vw, 1.75rem);
+}
+
+@media (max-height: 700px) {
+    :root {
+        --slide-padding: clamp(0.75rem, 3vw, 2rem);
+        --title-size: clamp(1.4rem, 4.5vw, 2.8rem);
+        --h2-size: clamp(1.1rem, 3vw, 1.8rem);
+        --h3-size: clamp(0.85rem, 1.8vw, 1.1rem);
+    }
+}
+
+@media (max-height: 600px) {
+    :root { --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem); }
+    .nav-dots, .slide-counter { display: none; }
+}
+
+@media (max-height: 500px) {
+    :root { --title-size: clamp(1rem, 3.5vw, 1.6rem); --h2-size: clamp(0.9rem, 2.5vw, 1.25rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+    html { scroll-behavior: auto; }
+}
+
+/* ─── Global Styles ─── */
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #ffffff;
+    color: #1A1A1A;
+}
+
+/* ─── Grid Overlay ─── */
+.slide {
+    background-color: #ffffff;
+    background-image:
+        linear-gradient(to right, rgba(128,128,128,0.07) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(128,128,128,0.07) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+/* ─── Blobs ─── */
+.blob {
+    position: absolute !important;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+}
+.blob-blue { background: #E5F0FF; }
+.blob-purple { background: #F0E5FF; }
+.blob-cyan { background: #E0F7FF; }
+
+/* ─── Slide nav and content sit above blobs ─── */
+.slide-nav { position: relative; z-index: 2; }
+.slide-content { position: relative; z-index: 2; }
+
+/* ─── Fixed Navigation Elements ─── */
+.progress-track {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: rgba(0,0,0,0.06);
+    z-index: 1000;
+}
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #3B82F6, #8B5CF6);
+    transition: width 0.4s ease;
+}
+
+.slide-counter {
+    position: fixed;
+    top: clamp(0.6rem, 1.5vw, 1rem);
+    right: clamp(1rem, 3vw, 2rem);
+    font-size: var(--small-size);
+    font-weight: 600;
+    color: #6B7280;
+    letter-spacing: 0.05em;
+    z-index: 1000;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.nav-dots {
+    position: fixed;
+    right: clamp(0.75rem, 2vw, 1.25rem);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 1000;
+}
+.nav-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.15);
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+    padding: 0;
+}
+.nav-dot.active {
+    background: #3B82F6;
+    transform: scale(1.4);
+}
+.nav-dot:hover { background: #8B5CF6; }
+
+/* ─── Slide Navbar ─── */
+.slide-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(0.75rem, 2vw, 1.25rem) var(--slide-padding);
+    flex-shrink: 0;
+}
+.slide-nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.logo-container {
+    width: 40px;
+    height: 40px;
+    background: #1A1A1A;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.logo-container-lg {
+    width: 80px;
+    height: 80px;
+    background: #1A1A1A;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.brand-name {
+    font-size: clamp(0.8rem, 1.5vw, 1rem);
+    font-weight: 700;
+    color: #1A1A1A;
+    letter-spacing: -0.01em;
+}
+.slide-section-tag {
+    font-size: var(--small-size);
+    font-weight: 600;
+    color: #6B7280;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* ─── Reveal Animations ─── */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1); }
+.slide.visible .reveal { opacity: 1; transform: translateY(0); }
+.slide.visible .reveal:nth-child(1) { transition-delay: 0.05s; }
+.slide.visible .reveal:nth-child(2) { transition-delay: 0.15s; }
+.slide.visible .reveal:nth-child(3) { transition-delay: 0.25s; }
+.slide.visible .reveal:nth-child(4) { transition-delay: 0.35s; }
+.slide.visible .reveal:nth-child(5) { transition-delay: 0.45s; }
+.slide.visible .reveal:nth-child(6) { transition-delay: 0.55s; }
+
+/* Slide 1 starts visible — no delay needed, animate in fast */
+#slide-1.visible .reveal:nth-child(1) { transition-delay: 0.1s; }
+#slide-1.visible .reveal:nth-child(2) { transition-delay: 0.2s; }
+#slide-1.visible .reveal:nth-child(3) { transition-delay: 0.32s; }
+#slide-1.visible .reveal:nth-child(4) { transition-delay: 0.44s; }
+#slide-1.visible .reveal:nth-child(5) { transition-delay: 0.56s; }
+
+/* ─── Gradient Text ─── */
+.grad-text {
+    background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ─── Section Label ─── */
+.section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--small-size);
+    font-weight: 600;
+    color: #6B7280;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: clamp(0.4rem, 1vw, 0.75rem);
+}
+.section-label::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 2px;
+    background: linear-gradient(90deg, #3B82F6, #8B5CF6);
+    border-radius: 2px;
+}
+
+/* ─── Card Style ─── */
+.card {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04);
+    padding: clamp(1rem, 2vw, 1.5rem);
+}
+
+/* ─── Icon Box ─── */
+.icon-box {
+    width: clamp(32px, 4vw, 44px);
+    height: clamp(32px, 4vw, 44px);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    flex-shrink: 0;
+    margin-bottom: clamp(0.5rem, 1vw, 0.75rem);
+}
+.icon-box-red { background: rgba(239,68,68,0.1); }
+.icon-box-green { background: rgba(34,197,94,0.1); }
+.icon-box-blue { background: rgba(59,130,246,0.1); }
+.icon-box-purple { background: rgba(139,92,246,0.1); }
+.icon-box-yellow { background: rgba(234,179,8,0.1); }
+.icon-box-cyan { background: rgba(6,182,212,0.1); }
+
+/* ─── Headings ─── */
+h1 { font-size: var(--title-size); font-weight: 800; color: #1A1A1A; letter-spacing: -0.03em; line-height: 1.1; }
+h2 { font-size: var(--h2-size); font-weight: 700; color: #1A1A1A; letter-spacing: -0.02em; line-height: 1.2; }
+h3 { font-size: var(--h3-size); font-weight: 600; color: #1A1A1A; line-height: 1.3; }
+p, li { font-size: var(--body-size); color: #6B7280; line-height: 1.6; }
+
+/* ─── CTA Button ─── */
+.btn-dark {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #1A1A1A;
+    color: #ffffff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: var(--body-size);
+    font-weight: 600;
+    padding: clamp(0.6rem, 1.5vw, 0.9rem) clamp(1.2rem, 3vw, 2rem);
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.2s;
+}
+.btn-dark:hover { opacity: 0.85; transform: translateY(-1px); }
+
+/* ─── Pulsing Dot ─── */
+@keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+}
+.pulse-dot {
+    position: relative;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #3B82F6;
+    flex-shrink: 0;
+}
+.pulse-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: #3B82F6;
+    animation: pulse-ring 1.5s ease-out infinite;
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 1 — TITLE
+═══════════════════════════════════════════ */
+#slide-1 .slide-content {
+    align-items: center;
+    text-align: center;
+    gap: var(--content-gap);
+    padding-top: 0;
+}
+.title-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(59,130,246,0.08);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: var(--small-size);
+    font-weight: 600;
+    color: #3B82F6;
+}
+.stats-row {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2.5rem);
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+.stat-value {
+    font-size: clamp(1.1rem, 2.5vw, 1.8rem);
+    font-weight: 800;
+    color: #1A1A1A;
+    letter-spacing: -0.03em;
+}
+.stat-label {
+    font-size: var(--small-size);
+    color: #6B7280;
+    font-weight: 500;
+}
+.stat-divider {
+    width: 1px;
+    height: clamp(28px, 4vw, 40px);
+    background: rgba(0,0,0,0.08);
+}
+.stats-card {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04);
+    padding: clamp(0.75rem, 2vw, 1.25rem) clamp(1.5rem, 4vw, 3rem);
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 2 — PROBLEM
+═══════════════════════════════════════════ */
+#slide-2 .cards-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+    margin-top: clamp(0.75rem, 2vw, 1.5rem);
+}
+#slide-2 .bottom-note {
+    margin-top: clamp(0.5rem, 1.5vw, 1rem);
+    font-size: var(--small-size);
+    color: #9CA3AF;
+    font-style: italic;
+    text-align: center;
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 3 — SOLUTION
+═══════════════════════════════════════════ */
+#slide-3 .cards-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+    margin-top: clamp(0.75rem, 2vw, 1.5rem);
+}
+.checkmark-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(0.5rem, 1.5vw, 1rem);
+    margin-top: clamp(0.5rem, 1.5vw, 1rem);
+    justify-content: center;
+}
+.check-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--small-size);
+    font-weight: 600;
+    color: #1A1A1A;
+    background: rgba(34,197,94,0.07);
+    border: 1px solid rgba(34,197,94,0.15);
+    border-radius: 999px;
+    padding: 5px 12px;
+}
+.check-chip::before { content: '✓'; color: #22c55e; }
+
+/* ═══════════════════════════════════════════
+   SLIDE 4 — HOW IT WORKS
+═══════════════════════════════════════════ */
+#slide-4 .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(0.75rem, 2vw, 1.25rem);
+    margin-top: clamp(0.75rem, 2vw, 1.25rem);
+}
+.step-card {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04);
+    padding: clamp(0.9rem, 2vw, 1.4rem);
+    position: relative;
+    overflow: hidden;
+}
+.step-number {
+    position: absolute;
+    top: clamp(0.6rem, 1.5vw, 1rem);
+    right: clamp(0.8rem, 2vw, 1.25rem);
+    font-size: clamp(1.8rem, 5vw, 3.5rem);
+    font-weight: 800;
+    color: rgba(0,0,0,0.04);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    pointer-events: none;
+}
+.step-icon { font-size: clamp(1rem, 2vw, 1.4rem); margin-bottom: 6px; }
+.step-title { font-size: var(--h3-size); font-weight: 700; color: #1A1A1A; margin-bottom: 4px; }
+.step-desc { font-size: var(--body-size); color: #6B7280; line-height: 1.55; }
+
+/* ═══════════════════════════════════════════
+   SLIDE 5 — FEATURES
+═══════════════════════════════════════════ */
+#slide-5 .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(0.6rem, 1.5vw, 1rem);
+    margin-top: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+.feature-card {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04);
+    padding: clamp(0.8rem, 1.8vw, 1.25rem);
+}
+.feature-title { font-size: var(--h3-size); font-weight: 700; color: #1A1A1A; margin: 6px 0 4px; }
+.feature-desc { font-size: var(--body-size); color: #6B7280; line-height: 1.5; }
+
+/* ═══════════════════════════════════════════
+   SLIDE 6 — ZK LOGIN
+═══════════════════════════════════════════ */
+#slide-6 .slide-content {
+    flex-direction: column;
+    gap: var(--content-gap);
+}
+#slide-6 .content-cols {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: clamp(1.5rem, 4vw, 4rem);
+    align-items: center;
+    flex: 1;
+}
+.explanation-point {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: clamp(0.6rem, 1.5vw, 1rem) 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.explanation-point:last-of-type { border-bottom: none; }
+.explanation-point h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--h3-size);
+    font-weight: 700;
+    color: #1A1A1A;
+}
+.explanation-point h3::before {
+    content: '✓';
+    width: 18px; height: 18px;
+    background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: white;
+    flex-shrink: 0;
+}
+.flow-diagram {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+.flow-box {
+    width: 100%;
+    padding: clamp(0.5rem, 1.2vw, 0.8rem) clamp(0.8rem, 2vw, 1.2rem);
+    border-radius: 12px;
+    text-align: center;
+    font-size: var(--small-size);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+.flow-box-blue { background: rgba(59,130,246,0.1); color: #3B82F6; border: 1px solid rgba(59,130,246,0.2); }
+.flow-box-slate { background: rgba(100,116,139,0.08); color: #475569; border: 1px solid rgba(100,116,139,0.15); }
+.flow-box-purple { background: rgba(139,92,246,0.1); color: #8B5CF6; border: 1px solid rgba(139,92,246,0.2); }
+.flow-box-dark { background: #1A1A1A; color: #ffffff; }
+.flow-arrow {
+    font-size: clamp(0.8rem, 1.5vw, 1.1rem);
+    color: #9CA3AF;
+    padding: 3px 0;
+    line-height: 1;
+}
+.enoki-note {
+    font-size: var(--small-size);
+    color: #9CA3AF;
+    text-align: center;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 7 — SEAL ENCRYPTION
+═══════════════════════════════════════════ */
+#slide-7 .content-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(1.5rem, 4vw, 4rem);
+    align-items: start;
+    flex: 1;
+}
+.seal-flow {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.4rem, 1vw, 0.75rem);
+    flex-wrap: wrap;
+    margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
+}
+.seal-box {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: clamp(0.5rem, 1.2vw, 0.85rem) clamp(0.75rem, 1.8vw, 1.2rem);
+    text-align: center;
+    flex: 1;
+}
+.seal-box-title { font-size: var(--small-size); font-weight: 700; color: #1A1A1A; }
+.seal-box-sub { font-size: clamp(0.55rem, 0.9vw, 0.7rem); color: #9CA3AF; margin-top: 2px; }
+.seal-arrow { color: #9CA3AF; font-size: clamp(0.8rem, 1.5vw, 1.1rem); flex-shrink: 0; }
+.key-servers {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: clamp(0.5rem, 1.2vw, 0.75rem);
+}
+.key-server-box {
+    background: rgba(139,92,246,0.07);
+    border: 1px solid rgba(139,92,246,0.15);
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: var(--small-size);
+    font-weight: 600;
+    color: #8B5CF6;
+    text-align: center;
+}
+.key-servers-label {
+    font-size: var(--small-size);
+    color: #6B7280;
+    text-align: center;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 8 — TECH STACK
+═══════════════════════════════════════════ */
+#slide-8 .stack-list {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.4rem, 1vw, 0.65rem);
+    margin-top: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+.stack-item {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: clamp(0.6rem, 1.5vw, 1rem);
+    padding: clamp(0.55rem, 1.3vw, 0.85rem) clamp(0.8rem, 2vw, 1.2rem);
+    border-left: 3px solid transparent;
+}
+.stack-icon { font-size: clamp(1rem, 1.8vw, 1.25rem); }
+.stack-info { display: flex; flex-direction: column; gap: 2px; }
+.stack-layer { font-size: var(--small-size); font-weight: 700; color: #1A1A1A; text-transform: uppercase; letter-spacing: 0.06em; }
+.stack-tech { font-size: var(--small-size); color: #6B7280; }
+.stack-desc { font-size: var(--small-size); color: #9CA3AF; text-align: right; max-width: clamp(120px, 30vw, 260px); }
+
+/* ═══════════════════════════════════════════
+   SLIDE 9 — RBAC
+═══════════════════════════════════════════ */
+#slide-9 .role-table {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.5rem, 1.2vw, 0.75rem);
+    margin-top: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+.role-row {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    display: flex;
+    align-items: center;
+    gap: clamp(0.75rem, 2vw, 1.25rem);
+    padding: clamp(0.65rem, 1.5vw, 1rem) clamp(1rem, 2.5vw, 1.5rem);
+}
+.role-pill {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: var(--small-size);
+    font-weight: 700;
+    min-width: 80px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.role-pill-viewer { background: rgba(107,114,128,0.1); color: #6B7280; }
+.role-pill-member { background: rgba(59,130,246,0.1); color: #3B82F6; }
+.role-pill-manager { background: rgba(139,92,246,0.1); color: #8B5CF6; }
+.role-pill-admin { background: rgba(234,179,8,0.12); color: #b45309; }
+.role-level {
+    font-size: var(--small-size);
+    font-weight: 700;
+    color: #9CA3AF;
+    flex-shrink: 0;
+    min-width: 50px;
+}
+.role-desc { font-size: var(--body-size); color: #6B7280; }
+
+/* ═══════════════════════════════════════════
+   SLIDE 10 — SECURITY
+═══════════════════════════════════════════ */
+#slide-10 .security-cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+    margin-top: clamp(0.75rem, 2vw, 1.5rem);
+    align-items: stretch;
+}
+.security-card {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04);
+    padding: clamp(1.2rem, 3vw, 2rem) clamp(1rem, 2.5vw, 1.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.5rem, 1.2vw, 0.85rem);
+}
+.security-icon-box {
+    width: clamp(40px, 5vw, 52px);
+    height: clamp(40px, 5vw, 52px);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+}
+.security-note {
+    margin-top: clamp(0.75rem, 1.5vw, 1rem);
+    text-align: center;
+    font-size: var(--small-size);
+    color: #9CA3AF;
+    font-style: italic;
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 11 — TESTNET STATUS
+═══════════════════════════════════════════ */
+#slide-11 .status-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(1.5rem, 4vw, 4rem);
+    align-items: start;
+    flex: 1;
+    margin-top: clamp(0.75rem, 2vw, 1.5rem);
+}
+.checklist {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.35rem, 0.9vw, 0.6rem);
+}
+.check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: var(--body-size);
+    color: #1A1A1A;
+}
+.check-icon { flex-shrink: 0; font-size: clamp(0.8rem, 1.4vw, 1rem); }
+.check-text { color: #374151; font-weight: 500; }
+.check-pending .check-text { color: #9CA3AF; }
+.contract-card {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04);
+    padding: clamp(1rem, 2.5vw, 1.75rem);
+}
+.contract-header {
+    font-size: var(--small-size);
+    font-weight: 700;
+    color: #9CA3AF;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: clamp(0.75rem, 1.5vw, 1rem);
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.contract-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: clamp(0.4rem, 1vw, 0.6rem) 0;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.contract-row:last-child { border-bottom: none; }
+.contract-key { font-size: var(--small-size); color: #6B7280; font-weight: 500; }
+.contract-val { font-size: var(--small-size); color: #1A1A1A; font-weight: 600; font-family: 'Plus Jakarta Sans', monospace; }
+
+/* ═══════════════════════════════════════════
+   SLIDE 12 — CTA
+═══════════════════════════════════════════ */
+#slide-12 .slide-content {
+    align-items: center;
+    text-align: center;
+    gap: var(--content-gap);
+}
+.feature-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(0.4rem, 1vw, 0.75rem);
+    justify-content: center;
+    margin-top: clamp(0.25rem, 0.75vw, 0.5rem);
+}
+.feature-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--small-size);
+    font-weight: 600;
+    color: #6B7280;
+    background: rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.07);
+    border-radius: 999px;
+    padding: 5px 14px;
+}
+.footer-note {
+    font-size: var(--small-size);
+    color: #9CA3AF;
+    margin-top: clamp(0.25rem, 0.75vw, 0.5rem);
+}
+</style>
+</head>
+<body>
+
+<!-- Fixed Navigation -->
+<div class="progress-track"><div class="progress-bar"></div></div>
+<div class="slide-counter">01 / 12</div>
+<div class="nav-dots"></div>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 1 — TITLE
+═══════════════════════════════════════════ -->
+<section class="slide visible" id="slide-1">
+    <!-- Blobs -->
+    <div class="blob blob-blue" style="width:min(500px,60vw);height:min(500px,60vw);top:calc(-1 * clamp(50px,8vw,120px));left:calc(-1 * clamp(50px,8vw,120px));opacity:0.7;"></div>
+    <div class="blob blob-purple" style="width:min(400px,50vw);height:min(400px,50vw);top:calc(-1 * clamp(40px,6vw,80px));right:calc(-1 * clamp(40px,6vw,80px));opacity:0.6;"></div>
+    <div class="blob blob-cyan" style="width:min(350px,40vw);height:min(350px,40vw);bottom:calc(-1 * clamp(60px,10vw,150px));left:50%;transform:translateX(-50%);opacity:0.5;"></div>
+
+    <!-- Slide Navbar -->
+    <nav class="slide-nav">
+        <div class="slide-nav-brand">
+            <div class="logo-container">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g1nav_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g1nav_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g1nav_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g1nav_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-name">SUI CRM</span>
+        </div>
+        <span class="slide-section-tag">Pitch Deck</span>
+    </nav>
+
+    <!-- Slide Content -->
+    <div class="slide-content" style="align-items:center;justify-content:center;text-align:center;gap:clamp(1rem,2.5vh,2rem);">
+
+        <!-- Logo -->
+        <div class="reveal">
+            <div class="logo-container-lg">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g1lg_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g1lg_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g1lg_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g1lg_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Project Name -->
+        <h1 class="reveal" style="font-size:clamp(3rem,8vw,6.5rem);font-weight:800;letter-spacing:-0.04em;line-height:1;text-align:center;">
+            SUI <span class="grad-text">CRM</span>
+        </h1>
+
+        <!-- Caption -->
+        <p class="reveal" style="font-size:clamp(1rem,2.2vw,1.4rem);color:#6B7280;font-weight:500;max-width:480px;margin:0 auto;line-height:1.5;text-align:center;">
+            The first on-chain CRM — contact profiles, encrypted notes, and team access enforced by smart contracts on Sui.
+        </p>
+
+        <!-- Live badge -->
+        <div class="reveal" style="display:flex;justify-content:center;">
+            <div class="title-badge">
+                <div class="pulse-dot"></div>
+                Built on Sui Network · Testnet Live
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 2 — THE PROBLEM
+═══════════════════════════════════════════ -->
+<section class="slide" id="slide-2">
+    <nav class="slide-nav">
+        <div class="slide-nav-brand">
+            <div class="logo-container">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g2nav_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g2nav_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g2nav_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g2nav_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-name">SUI CRM</span>
+        </div>
+        <span class="slide-section-tag">The Problem</span>
+    </nav>
+
+    <div class="slide-content">
+        <div class="reveal">
+            <div class="section-label">The Problem</div>
+            <h2>Traditional CRMs own your<br><span class="grad-text">customer data</span></h2>
+        </div>
+
+        <div class="cards-row">
+            <div class="card reveal">
+                <div class="icon-box icon-box-red">🏢</div>
+                <h3>Vendor Lock-in</h3>
+                <p style="margin-top:8px;">Your data lives on their servers. They can change terms, go down, or get acquired overnight.</p>
+            </div>
+            <div class="card reveal">
+                <div class="icon-box icon-box-red">🔓</div>
+                <h3>No Real Privacy</h3>
+                <p style="margin-top:8px;">Employees, DBAs, and executives at the vendor can access your customer records at any time.</p>
+            </div>
+            <div class="card reveal">
+                <div class="icon-box icon-box-red">⛽</div>
+                <h3>Web3 Friction</h3>
+                <p style="margin-top:8px;">Existing CRMs have no concept of wallet addresses, on-chain history, or token-gated access.</p>
+            </div>
+        </div>
+
+        <p class="reveal bottom-note">SUI CRM eliminates all three problems by design.</p>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 3 — OUR SOLUTION
+═══════════════════════════════════════════ -->
+<section class="slide" id="slide-3">
+    <nav class="slide-nav">
+        <div class="slide-nav-brand">
+            <div class="logo-container">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g3nav_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g3nav_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g3nav_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g3nav_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-name">SUI CRM</span>
+        </div>
+        <span class="slide-section-tag">The Solution</span>
+    </nav>
+
+    <div class="slide-content">
+        <div class="reveal">
+            <div class="section-label">The Solution</div>
+            <h2>Your CRM, owned by<br><span class="grad-text">no one but you</span></h2>
+        </div>
+
+        <div class="cards-row">
+            <div class="card reveal">
+                <div class="icon-box icon-box-blue">🔗</div>
+                <h3>On-Chain Profiles</h3>
+                <p style="margin-top:8px;">Every contact is a Move object on Sui. Immutable, auditable, self-custodial. You control it, always.</p>
+            </div>
+            <div class="card reveal">
+                <div class="icon-box icon-box-purple">🔐</div>
+                <h3>Threshold Encrypted</h3>
+                <p style="margin-top:8px;">Notes & files encrypted via Seal. Keys split across independent servers — even we can't read your data.</p>
+            </div>
+            <div class="card reveal">
+                <div class="icon-box icon-box-green">👤</div>
+                <h3>Zero-Knowledge Auth</h3>
+                <p style="margin-top:8px;">Sign in with Google. A ZK proof derives your Sui wallet — no seed phrase, no setup, no extensions.</p>
+            </div>
+        </div>
+
+        <div class="checkmark-row reveal">
+            <span class="check-chip">Self-custodial</span>
+            <span class="check-chip">Gas sponsored</span>
+            <span class="check-chip">Open source</span>
+            <span class="check-chip">Testnet live</span>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 4 — HOW IT WORKS
+═══════════════════════════════════════════ -->
+<section class="slide" id="slide-4">
+    <nav class="slide-nav">
+        <div class="slide-nav-brand">
+            <div class="logo-container">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g4nav_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g4nav_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g4nav_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g4nav_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-name">SUI CRM</span>
+        </div>
+        <span class="slide-section-tag">Flow</span>
+    </nav>
+
+    <div class="slide-content">
+        <div class="reveal">
+            <div class="section-label">Flow</div>
+            <h2>From sign-in to encrypted CRM<br>in <span class="grad-text">60 seconds</span></h2>
+        </div>
+
+        <div class="steps-grid">
+            <div class="step-card reveal">
+                <div class="step-number">01</div>
+                <div class="step-icon">🔐</div>
+                <div class="step-title">Sign In</div>
+                <p class="step-desc">Google OAuth triggers zkLogin. A ZK proof generates your Sui address. No browser extension needed.</p>
+            </div>
+            <div class="step-card reveal">
+                <div class="step-number">02</div>
+                <div class="step-icon">🏗️</div>
+                <div class="step-title">Create Org</div>
+                <p class="step-desc">Deploy your <code style="font-size:0.85em;background:rgba(0,0,0,0.05);padding:1px 5px;border-radius:4px;">OrgAccessRegistry</code> smart contract on Sui. Invite team members by email.</p>
+            </div>
+            <div class="step-card reveal">
+                <div class="step-number">03</div>
+                <div class="step-icon">👥</div>
+                <div class="step-title">Add Contacts</div>
+                <p class="step-desc">Each contact creates a <code style="font-size:0.85em;background:rgba(0,0,0,0.05);padding:1px 5px;border-radius:4px;">Profile</code> object on-chain, owned by your org's registry.</p>
+            </div>
+            <div class="step-card reveal">
+                <div class="step-number">04</div>
+                <div class="step-icon">🔒</div>
+                <div class="step-title">Encrypt & Share</div>
+                <p class="step-desc">Upload notes/files. Seal encrypts them. Access is controlled by on-chain role levels.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 5 — KEY FEATURES
+═══════════════════════════════════════════ -->
+<section class="slide" id="slide-5">
+    <nav class="slide-nav">
+        <div class="slide-nav-brand">
+            <div class="logo-container">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g5nav_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g5nav_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g5nav_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g5nav_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-name">SUI CRM</span>
+        </div>
+        <span class="slide-section-tag">Features</span>
+    </nav>
+
+    <div class="slide-content">
+        <div class="reveal">
+            <div class="section-label">Features</div>
+            <h2>Everything built for<br><span class="grad-text">Web3 organizations</span></h2>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card reveal">
+                <div class="icon-box icon-box-blue">🔑</div>
+                <div class="feature-title">ZK Login</div>
+                <p class="feature-desc">Google sign-in generates a self-custodial Sui wallet via zero-knowledge proof. No seed phrases.</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="icon-box icon-box-purple">🔒</div>
+                <div class="feature-title">Seal Encryption</div>
+                <p class="feature-desc">Threshold encryption via Seal SDK. Keys split across servers, reconstructed only on valid role.</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="icon-box icon-box-green">👥</div>
+                <div class="feature-title">Role Access</div>
+                <p class="feature-desc">Viewer → Member → Manager → Admin roles enforced by Move smart contract on-chain.</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="icon-box icon-box-cyan">📂</div>
+                <div class="feature-title">Walrus Storage</div>
+                <p class="feature-desc">Encrypted blobs stored on Walrus, Sui's decentralized storage layer. Persistent and censorship-resistant.</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="icon-box icon-box-yellow">⚡</div>
+                <div class="feature-title">Gas Sponsored</div>
+                <p class="feature-desc">Enoki gas pool covers all transactions. Team members need zero SUI tokens to operate.</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="icon-box icon-box-blue" style="background:rgba(16,185,129,0.1);">🌐</div>
+                <div class="feature-title">On-Chain Profiles</div>
+                <p class="feature-desc">Every contact, interaction, and org relationship is a first-class Sui object.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 6 — ZK LOGIN DEEP DIVE
+═══════════════════════════════════════════ -->
+<section class="slide" id="slide-6">
+    <nav class="slide-nav">
+        <div class="slide-nav-brand">
+            <div class="logo-container">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g6nav_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g6nav_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g6nav_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g6nav_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-name">SUI CRM</span>
+        </div>
+        <span class="slide-section-tag">Authentication</span>
+    </nav>
+
+    <div class="slide-content">
+        <div class="reveal">
+            <div class="section-label">Authentication</div>
+            <h2>Sign in with Google.<br>Own a <span class="grad-text">Sui wallet.</span></h2>
+        </div>
+
+        <div class="content-cols reveal">
+            <!-- Left: Explanations -->
+            <div>
+                <div class="explanation-point">
+                    <h3>OAuth Flow</h3>
+                    <p>User logs in with Google. An ephemeral keypair is generated in-browser for this session only.</p>
+                </div>
+                <div class="explanation-point">
+                    <h3>Zero-Knowledge Proof</h3>
+                    <p>A ZK proof is computed that links your Google identity to the ephemeral key, without revealing your email on-chain.</p>
+                </div>
+                <div class="explanation-point">
+                    <h3>Deterministic Address</h3>
+                    <p>Your Sui address is derived from a hash of your Google <code style="font-size:0.85em;background:rgba(0,0,0,0.05);padding:1px 5px;border-radius:4px;">sub</code> + salt. Same account = same address, always.</p>
+                </div>
+                <p class="enoki-note" style="text-align:left;margin-top:clamp(0.5rem,1.2vw,0.85rem);">Powered by Enoki for gas sponsorship</p>
+            </div>
+
+            <!-- Right: Flow Diagram -->
+            <div>
+                <div class="card" style="padding:clamp(0.75rem,2vw,1.5rem);">
+                    <div class="flow-diagram">
+                        <div class="flow-box flow-box-blue">Google OAuth</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-box flow-box-slate">Ephemeral Keypair</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-box flow-box-purple">ZK Proof</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-box flow-box-dark">Sui Address</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 7 — SEAL THRESHOLD ENCRYPTION
+═══════════════════════════════════════════ -->
+<section class="slide" id="slide-7">
+    <nav class="slide-nav">
+        <div class="slide-nav-brand">
+            <div class="logo-container">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g7nav_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g7nav_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g7nav_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g7nav_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-name">SUI CRM</span>
+        </div>
+        <span class="slide-section-tag">Encryption</span>
+    </nav>
+
+    <div class="slide-content">
+        <div class="reveal">
+            <div class="section-label">Encryption</div>
+            <h2>Your data encrypted before it<br>ever <span class="grad-text">leaves your device</span></h2>
+        </div>
+
+        <div class="content-cols reveal">
+            <!-- Left: Points -->
+            <div>
+                <div class="explanation-point">
+                    <h3>Encrypt First</h3>
+                    <p>Files and notes are encrypted client-side using Seal SDK before upload to Walrus. The server never sees plaintext.</p>
+                </div>
+                <div class="explanation-point">
+                    <h3>Key Sharding</h3>
+                    <p>The encryption key is split across N independent Seal key servers. No single server holds the full key.</p>
+                </div>
+                <div class="explanation-point">
+                    <h3>Role-Gated Decrypt</h3>
+                    <p>Key servers only reconstruct the key after calling <code style="font-size:0.85em;background:rgba(0,0,0,0.05);padding:1px 5px;border-radius:4px;">seal_approve</code> in the Move contract — which checks the caller's on-chain role level.</p>
+                </div>
+            </div>
+
+            <!-- Right: Flow -->
+            <div style="display:flex;flex-direction:column;gap:clamp(0.5rem,1.2vw,0.85rem);">
+                <div class="card" style="padding:clamp(0.75rem,2vw,1.25rem);">
+                    <div class="seal-flow">
+                        <div class="seal-box">
+                            <div class="seal-box-title">Your File</div>
+                            <div class="seal-box-sub">Plaintext</div>
+                        </div>
+                        <div class="seal-arrow">→</div>
+                        <div class="seal-box" style="background:rgba(139,92,246,0.05);border-color:rgba(139,92,246,0.15);">
+                            <div class="seal-box-title" style="color:#8B5CF6;">Sealed</div>
+                            <div class="seal-box-sub">Encrypted</div>
+                        </div>
+                        <div class="seal-arrow">→</div>
+                        <div class="seal-box" style="background:rgba(59,130,246,0.05);border-color:rgba(59,130,246,0.15);">
+                            <div class="seal-box-title" style="color:#3B82F6;">Walrus Blob</div>
+                            <div class="seal-box-sub">Stored</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="padding:clamp(0.75rem,2vw,1.25rem);">
+                    <div class="key-servers-label">Key Servers (threshold)</div>
+                    <div class="key-servers">
+                        <div class="key-server-box">Server 1</div>
+                        <div class="key-server-box">Server 2</div>
+                        <div class="key-server-box">Server 3</div>
+                    </div>
+                    <p style="font-size:var(--small-size);color:#9CA3AF;text-align:center;margin-top:8px;">Quorum required to reconstruct key</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 8 — TECH STACK
+═══════════════════════════════════════════ -->
+<section class="slide" id="slide-8">
+    <nav class="slide-nav">
+        <div class="slide-nav-brand">
+            <div class="logo-container">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g8nav_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g8nav_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g8nav_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g8nav_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-name">SUI CRM</span>
+        </div>
+        <span class="slide-section-tag">Architecture</span>
+    </nav>
+
+    <div class="slide-content">
+        <div class="reveal">
+            <div class="section-label">Architecture</div>
+            <h2>Six layers,<br><span class="grad-text">zero compromise</span></h2>
+        </div>
+
+        <div class="stack-list">
+            <div class="stack-item reveal" style="border-left-color:#3B82F6;">
+                <span class="stack-icon">🔵</span>
+                <div class="stack-info">
+                    <span class="stack-layer">Auth</span>
+                    <span class="stack-tech">zkLogin + Enoki</span>
+                </div>
+                <span class="stack-desc">Google OAuth → zkProof → Sui address. Gas sponsorship via Enoki pool.</span>
+            </div>
+            <div class="stack-item reveal" style="border-left-color:#8B5CF6;">
+                <span class="stack-icon">🟣</span>
+                <div class="stack-info">
+                    <span class="stack-layer">Chain</span>
+                    <span class="stack-tech">Sui Network (Move)</span>
+                </div>
+                <span class="stack-desc">Contact profiles, org registry, interactions — all first-class objects.</span>
+            </div>
+            <div class="stack-item reveal" style="border-left-color:#60A5FA;">
+                <span class="stack-icon">🔵</span>
+                <div class="stack-info">
+                    <span class="stack-layer">Encryption</span>
+                    <span class="stack-tech">Seal SDK</span>
+                </div>
+                <span class="stack-desc">Threshold key management. Role-gated decryption via Move smart contract.</span>
+            </div>
+            <div class="stack-item reveal" style="border-left-color:#06B6D4;">
+                <span class="stack-icon">🩵</span>
+                <div class="stack-info">
+                    <span class="stack-layer">Storage</span>
+                    <span class="stack-tech">Walrus</span>
+                </div>
+                <span class="stack-desc">Decentralized blob storage for encrypted files and notes.</span>
+            </div>
+            <div class="stack-item reveal" style="border-left-color:#EAB308;">
+                <span class="stack-icon">🟡</span>
+                <div class="stack-info">
+                    <span class="stack-layer">Gas</span>
+                    <span class="stack-tech">Enoki Gas Pool</span>
+                </div>
+                <span class="stack-desc">Pre-funded org pool covers all team member transactions seamlessly.</span>
+            </div>
+            <div class="stack-item reveal" style="border-left-color:#22C55E;">
+                <span class="stack-icon">🟢</span>
+                <div class="stack-info">
+                    <span class="stack-layer">Index</span>
+                    <span class="stack-tech">MongoDB</span>
+                </div>
+                <span class="stack-desc">Off-chain index for contacts, invites, notes metadata. Supplementary to chain.</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 9 — RBAC
+═══════════════════════════════════════════ -->
+<section class="slide" id="slide-9">
+    <nav class="slide-nav">
+        <div class="slide-nav-brand">
+            <div class="logo-container">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g9nav_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g9nav_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g9nav_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g9nav_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-name">SUI CRM</span>
+        </div>
+        <span class="slide-section-tag">Access Control</span>
+    </nav>
+
+    <div class="slide-content">
+        <div class="reveal">
+            <div class="section-label">Access Control</div>
+            <h2>Enforced <span class="grad-text">on-chain</span>,<br>not by a config file</h2>
+        </div>
+
+        <p class="reveal" style="max-width:680px;margin-bottom:clamp(0.4rem,1vw,0.75rem);">Your <code style="font-size:0.9em;background:rgba(0,0,0,0.05);padding:2px 7px;border-radius:5px;">OrgAccessRegistry</code> Move object stores each member's role as a <code style="font-size:0.9em;background:rgba(0,0,0,0.05);padding:2px 7px;border-radius:5px;">u8</code>. <code style="font-size:0.9em;background:rgba(0,0,0,0.05);padding:2px 7px;border-radius:5px;">seal_approve</code> checks this value before authorizing decryption.</p>
+
+        <div class="role-table">
+            <div class="role-row reveal">
+                <span class="role-pill role-pill-viewer">Viewer</span>
+                <span class="role-level">Level 1</span>
+                <span class="role-desc">Can decrypt resources tagged "Viewers and above"</span>
+            </div>
+            <div class="role-row reveal">
+                <span class="role-pill role-pill-member">Member</span>
+                <span class="role-level">Level 2</span>
+                <span class="role-desc">All viewer permissions + log interactions + view files</span>
+            </div>
+            <div class="role-row reveal">
+                <span class="role-pill role-pill-manager">Manager</span>
+                <span class="role-level">Level 3</span>
+                <span class="role-desc">All member permissions + upload files + create notes</span>
+            </div>
+            <div class="role-row reveal">
+                <span class="role-pill role-pill-admin">Admin</span>
+                <span class="role-level">Level 4</span>
+                <span class="role-desc">Full control: org creation, member invite, all decryption</span>
+            </div>
+        </div>
+
+        <p class="reveal" style="font-size:var(--small-size);color:#9CA3AF;font-style:italic;margin-top:clamp(0.5rem,1.2vw,0.85rem);">Role levels are immutable on-chain values in your OrgAccessRegistry object.</p>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 10 — SECURITY ARCHITECTURE
+═══════════════════════════════════════════ -->
+<section class="slide" id="slide-10">
+    <nav class="slide-nav">
+        <div class="slide-nav-brand">
+            <div class="logo-container">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g10nav_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g10nav_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g10nav_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g10nav_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-name">SUI CRM</span>
+        </div>
+        <span class="slide-section-tag">Security</span>
+    </nav>
+
+    <div class="slide-content">
+        <div class="reveal">
+            <div class="section-label">Security</div>
+            <h2>Your data is yours.<br><span class="grad-text">Cryptographically.</span></h2>
+        </div>
+
+        <div class="security-cols">
+            <div class="security-card reveal">
+                <div class="security-icon-box icon-box-purple">🔐</div>
+                <h3>Seal Threshold</h3>
+                <p>Keys split across independent servers. A quorum must agree to reconstruct. No single point of trust or failure.</p>
+            </div>
+            <div class="security-card reveal">
+                <div class="security-icon-box icon-box-blue">📜</div>
+                <h3>Move Contract Logic</h3>
+                <p><code style="font-size:0.85em;background:rgba(0,0,0,0.05);padding:1px 5px;border-radius:4px;">seal_approve</code> enforces access in an auditable Move function. No backend server can override it.</p>
+            </div>
+            <div class="security-card reveal">
+                <div class="security-icon-box icon-box-green">🕶️</div>
+                <h3>ZK Identity</h3>
+                <p>Google identity never touches the blockchain. Only a ZK proof does — you are authenticated without revealing who you are.</p>
+            </div>
+        </div>
+
+        <p class="reveal security-note">Even SUI CRM operators cannot read your org's encrypted data.</p>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 11 — LIVE ON TESTNET
+═══════════════════════════════════════════ -->
+<section class="slide" id="slide-11">
+    <nav class="slide-nav">
+        <div class="slide-nav-brand">
+            <div class="logo-container">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g11nav_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g11nav_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g11nav_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g11nav_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-name">SUI CRM</span>
+        </div>
+        <span class="slide-section-tag">Status</span>
+    </nav>
+
+    <div class="slide-content">
+        <div class="reveal">
+            <div class="section-label">Status</div>
+            <h2>Live on <span class="grad-text">Sui Testnet</span></h2>
+        </div>
+
+        <div class="status-cols reveal">
+            <!-- Checklist -->
+            <div>
+                <div class="checklist">
+                    <div class="check-item">
+                        <span class="check-icon">✅</span>
+                        <span class="check-text">zkLogin via Google OAuth</span>
+                    </div>
+                    <div class="check-item">
+                        <span class="check-icon">✅</span>
+                        <span class="check-text">OrgAccessRegistry smart contract</span>
+                    </div>
+                    <div class="check-item">
+                        <span class="check-icon">✅</span>
+                        <span class="check-text">On-chain contact profiles (Move)</span>
+                    </div>
+                    <div class="check-item">
+                        <span class="check-icon">✅</span>
+                        <span class="check-text">Seal threshold encryption for notes</span>
+                    </div>
+                    <div class="check-item">
+                        <span class="check-icon">✅</span>
+                        <span class="check-text">Walrus blob storage for files</span>
+                    </div>
+                    <div class="check-item">
+                        <span class="check-icon">✅</span>
+                        <span class="check-text">Enoki gas sponsorship</span>
+                    </div>
+                    <div class="check-item">
+                        <span class="check-icon">✅</span>
+                        <span class="check-text">Team invite system (email)</span>
+                    </div>
+                    <div class="check-item">
+                        <span class="check-icon">✅</span>
+                        <span class="check-text">Role-based access (on-chain)</span>
+                    </div>
+                    <div class="check-item check-pending">
+                        <span class="check-icon">⏳</span>
+                        <span class="check-text">SuiNS reverse lookup (live)</span>
+                    </div>
+                    <div class="check-item check-pending">
+                        <span class="check-icon">⏳</span>
+                        <span class="check-text">Mainnet deployment (coming)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contract Info -->
+            <div>
+                <div class="contract-card">
+                    <div class="contract-header">Contract Info</div>
+                    <div class="contract-row">
+                        <span class="contract-key">Package</span>
+                        <span class="contract-val">0xd867...</span>
+                    </div>
+                    <div class="contract-row">
+                        <span class="contract-key">Network</span>
+                        <span class="contract-val" style="color:#3B82F6;">Sui Testnet</span>
+                    </div>
+                    <div class="contract-row">
+                        <span class="contract-key">Registry</span>
+                        <span class="contract-val">OrgAccessRegistry</span>
+                    </div>
+                    <div class="contract-row">
+                        <span class="contract-key">Encryption</span>
+                        <span class="contract-val">Seal SDK</span>
+                    </div>
+                    <div class="contract-row">
+                        <span class="contract-key">Storage</span>
+                        <span class="contract-val">Walrus</span>
+                    </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:8px;margin-top:clamp(0.75rem,1.8vw,1.25rem);padding:clamp(0.6rem,1.5vw,1rem) clamp(0.8rem,2vw,1.2rem);background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:14px;">
+                    <div class="pulse-dot" style="background:#22C55E;"></div>
+                    <span style="font-size:var(--small-size);font-weight:600;color:#15803d;">Testnet Deployment Active</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 12 — CTA
+═══════════════════════════════════════════ -->
+<section class="slide" id="slide-12">
+    <!-- Blobs -->
+    <div class="blob blob-blue" style="width:min(500px,60vw);height:min(500px,60vw);top:calc(-1 * clamp(50px,8vw,120px));left:calc(-1 * clamp(50px,8vw,120px));opacity:0.7;"></div>
+    <div class="blob blob-purple" style="width:min(400px,50vw);height:min(400px,50vw);top:calc(-1 * clamp(40px,6vw,80px));right:calc(-1 * clamp(40px,6vw,80px));opacity:0.6;"></div>
+    <div class="blob blob-cyan" style="width:min(350px,40vw);height:min(350px,40vw);bottom:calc(-1 * clamp(60px,10vw,150px));left:50%;transform:translateX(-50%);opacity:0.5;"></div>
+
+    <nav class="slide-nav">
+        <div class="slide-nav-brand">
+            <div class="logo-container">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g12nav_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g12nav_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g12nav_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g12nav_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-name">SUI CRM</span>
+        </div>
+        <span class="slide-section-tag">Get Started</span>
+    </nav>
+
+    <div class="slide-content">
+        <!-- Large Logo -->
+        <div class="reveal" style="display:flex;justify-content:center;">
+            <div class="logo-container-lg">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#g12lg_a)"/>
+                    <path d="M4 16L12 20L20 16" stroke="url(#g12lg_b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12V16L12 20V16L4 12Z" fill="white" fill-opacity="0.2"/>
+                    <defs>
+                        <linearGradient id="g12lg_a" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                        <linearGradient id="g12lg_b" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+
+        <h2 class="reveal" style="text-align:center;font-size:var(--title-size);font-weight:800;letter-spacing:-0.03em;">
+            Own your <span class="grad-text">customer</span><br>relationships
+        </h2>
+
+        <p class="reveal" style="font-size:clamp(0.8rem,1.6vw,1.05rem);color:#6B7280;text-align:center;max-width:520px;margin:0 auto;font-weight:500;line-height:1.6;">
+            Sign in with Google and create your organization in under a minute. No seed phrase. No gas. No vendor.
+        </p>
+
+        <div class="reveal" style="display:flex;justify-content:center;">
+            <a href="/login" class="btn-dark" style="font-size:clamp(0.8rem,1.5vw,1rem);padding:clamp(0.7rem,1.8vw,1rem) clamp(1.5rem,4vw,2.5rem);">
+                Launch SUI CRM →
+            </a>
+        </div>
+
+        <div class="feature-chips reveal">
+            <span class="feature-chip">Self-custodial</span>
+            <span class="feature-chip">Gas sponsored</span>
+            <span class="feature-chip">Open source</span>
+        </div>
+
+        <p class="footer-note reveal">Built on Sui Network · Powered by Seal + Walrus · Testnet Live</p>
+    </div>
+</section>
+
+<!-- ─── JavaScript ─── -->
+<script>
+class SlidePresentation {
+    constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.current = 0;
+        this.total = this.slides.length;
+        this.isScrolling = false;
+
+        this.progressBar = document.querySelector('.progress-bar');
+        this.counter = document.querySelector('.slide-counter');
+
+        this.setupObserver();
+        this.setupKeyboard();
+        this.setupTouch();
+        this.setupWheel();
+        this.setupDots();
+        this.updateProgress(0);
+        // Ensure first slide is always visible immediately
+        if (this.slides[0]) this.slides[0].classList.add('visible');
+    }
+
+    setupObserver() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    const idx = this.slides.indexOf(entry.target);
+                    this.current = idx;
+                    this.updateProgress(idx);
+                }
+            });
+        }, { threshold: 0.5 });
+        this.slides.forEach(s => observer.observe(s));
+    }
+
+    goTo(idx) {
+        idx = Math.max(0, Math.min(this.total - 1, idx));
+        this.slides[idx].scrollIntoView({ behavior: 'smooth' });
+    }
+
+    setupKeyboard() {
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault(); this.goTo(this.current + 1);
+            }
+            if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault(); this.goTo(this.current - 1);
+            }
+            if (e.key === 'Home') { e.preventDefault(); this.goTo(0); }
+            if (e.key === 'End') { e.preventDefault(); this.goTo(this.total - 1); }
+        });
+    }
+
+    setupWheel() {
+        let lastWheel = 0;
+        document.addEventListener('wheel', e => {
+            e.preventDefault();
+            const now = Date.now();
+            if (now - lastWheel < 800) return;
+            lastWheel = now;
+            if (e.deltaY > 0) this.goTo(this.current + 1);
+            else this.goTo(this.current - 1);
+        }, { passive: false });
+    }
+
+    setupTouch() {
+        let startY = 0;
+        document.addEventListener('touchstart', e => { startY = e.touches[0].clientY; });
+        document.addEventListener('touchend', e => {
+            const diff = startY - e.changedTouches[0].clientY;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) this.goTo(this.current + 1);
+                else this.goTo(this.current - 1);
+            }
+        });
+    }
+
+    setupDots() {
+        const nav = document.querySelector('.nav-dots');
+        this.slides.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.className = 'nav-dot';
+            dot.setAttribute('aria-label', `Slide ${i + 1}`);
+            dot.addEventListener('click', () => this.goTo(i));
+            nav.appendChild(dot);
+        });
+        this.dots = nav.querySelectorAll('.nav-dot');
+    }
+
+    updateProgress(idx) {
+        const pct = this.total > 1 ? (idx / (this.total - 1)) * 100 : 0;
+        if (this.progressBar) this.progressBar.style.width = pct + '%';
+        if (this.counter) this.counter.textContent = `${String(idx + 1).padStart(2, '0')} / ${String(this.total).padStart(2, '0')}`;
+        if (this.dots) {
+            this.dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => new SlidePresentation());
+</script>
+</body>
+</html>

@@ -32,7 +32,8 @@
       "Bash(cat:*)",
       "Bash(npm list:*)",
       "Bash(find:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(open:*)"
     ]
   }
 }
