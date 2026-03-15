@@ -205,7 +205,7 @@ export function AddContactForm() {
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <Button type="submit" disabled={loading || !address || !name.trim()} className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold">
+      <Button type="submit" disabled={loading || !address || !name.trim()} className="w-full h-9 bg-[#0f0f0f] hover:bg-black text-white rounded-xl font-semibold">
         {loading ? (
           <><Loader2 className="size-4 mr-2 animate-spin" />Creating on-chain…</>
         ) : (

@@ -27,7 +27,7 @@ export default function ContactProfilePage() {
   return (
     <div className="max-w-[1000px] mx-auto space-y-8 pb-16">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white/60 backdrop-blur-md p-6 sm:p-8 rounded-[32px] border border-slate-100 shadow-lg shadow-black/5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -41,15 +41,15 @@ export default function ContactProfilePage() {
             </Link>
           </Button>
           <div className="flex items-center gap-3 min-w-0">
-            <div className="size-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+            <div className="size-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 shrink-0">
               {contact?.name ? (
-                <span className="text-lg font-black">{contact.name.charAt(0).toUpperCase()}</span>
+                <span className="text-lg font-bold">{contact.name.charAt(0).toUpperCase()}</span>
               ) : (
                 <User className="size-6" />
               )}
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#1a1a1a] truncate">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1a1a1a] truncate">
                 {contact?.name ?? "Contact profile"}
               </h1>
               <div className="flex items-center gap-3 mt-0.5 flex-wrap">
@@ -82,31 +82,31 @@ export default function ContactProfilePage() {
         <TabsList className="w-full sm:w-auto h-auto flex flex-wrap gap-1 p-1.5 rounded-2xl bg-slate-100 border border-slate-200/80">
           <TabsTrigger
             value="overview"
-            className="rounded-xl px-5 py-2.5 text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
+            className="rounded-xl px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
           >
             Overview
           </TabsTrigger>
           <TabsTrigger
             value="notes"
-            className="rounded-xl px-5 py-2.5 text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
+            className="rounded-xl px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
           >
             Notes
           </TabsTrigger>
           <TabsTrigger
             value="files"
-            className="rounded-xl px-5 py-2.5 text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
+            className="rounded-xl px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
           >
             Files
           </TabsTrigger>
           <TabsTrigger
             value="interactions"
-            className="rounded-xl px-5 py-2.5 text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
+            className="rounded-xl px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
           >
             Interactions
           </TabsTrigger>
           <TabsTrigger
             value="onchain"
-            className="rounded-xl px-5 py-2.5 text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
+            className="rounded-xl px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
           >
             Onchain
           </TabsTrigger>

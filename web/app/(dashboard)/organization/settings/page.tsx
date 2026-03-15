@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
   Settings,
   Building2,
-  GripVertical,
   Info,
   ShieldCheck,
   Zap,
@@ -58,16 +57,11 @@ export default function OrganizationSettingsPage() {
 
       <div className="grid gap-8 items-start">
         {/* Identity Card */}
-        <Card className="border-none shadow-xl shadow-black/5 bg-white rounded-3xl overflow-hidden relative group">
-          <div className="absolute top-4 right-4 text-slate-200 group-hover:text-slate-400 cursor-grab active:cursor-grabbing transition-colors">
-            <GripVertical className="size-5" />
-          </div>
+        <Card className="border border-slate-100 shadow-sm bg-white rounded-2xl overflow-hidden">
           <CardHeader className="p-8 pb-4">
             <div className="flex items-center gap-2">
-              <div className="size-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500">
-                <Building2 className="size-5" />
-              </div>
-              <CardTitle className="text-xl font-bold text-[#1a1a1a]">Identity</CardTitle>
+              <Building2 className="size-5 text-slate-500" />
+              <CardTitle className="text-base font-semibold text-[#1a1a1a]">Identity</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-8 pt-0 space-y-10">
@@ -101,15 +95,13 @@ export default function OrganizationSettingsPage() {
         </Card>
 
         {/* ─── Gas Vault / Sponsored Transactions ─── */}
-        <Card className="border-none shadow-xl shadow-black/5 bg-white rounded-3xl overflow-hidden">
+        <Card className="border border-slate-100 shadow-sm bg-white rounded-2xl overflow-hidden">
           <CardHeader className="p-8 pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="size-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
-                  <Fuel className="size-5" />
-                </div>
+                <Fuel className="size-5 text-slate-500" />
                 <div>
-                  <CardTitle className="text-xl font-bold text-[#1a1a1a]">Gas Vault</CardTitle>
+                  <CardTitle className="text-base font-semibold text-[#1a1a1a]">Gas Vault</CardTitle>
                   <CardDescription className="text-xs text-slate-400 mt-0.5">
                     Sponsor gas fees for all team members via Enoki
                   </CardDescription>
@@ -148,7 +140,7 @@ export default function OrganizationSettingsPage() {
                   "Transactions are signed by each user's own zkLogin key — fully self-custodial.",
                 ].map((step, i) => (
                   <li key={i} className="flex items-start gap-3 text-xs text-slate-600">
-                    <span className="size-5 rounded-full bg-amber-100 text-amber-600 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="size-5 rounded-full bg-amber-100 text-amber-600 font-semibold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
                       {i + 1}
                     </span>
                     {step}
@@ -216,7 +208,7 @@ export default function OrganizationSettingsPage() {
             <div className="flex gap-3 pt-2">
               <Button
                 asChild
-                className="h-12 px-6 bg-[#1a1a1a] hover:bg-black text-white rounded-2xl font-bold text-sm shadow-xl shadow-black/10 transition-all active:scale-[0.98] gap-2"
+                className="h-12 px-6 bg-[#0f0f0f] hover:bg-black text-white rounded-2xl font-bold text-sm shadow-sm transition-all active:scale-[0.98] gap-2"
               >
                 <a
                   href="https://portal.enoki.mystenlabs.com"
@@ -246,13 +238,11 @@ export default function OrganizationSettingsPage() {
         </Card>
 
         {/* Security & Encryption */}
-        <Card className="border-none shadow-xl shadow-black/5 bg-white rounded-3xl overflow-hidden relative group opacity-60">
+        <Card className="border border-slate-100 shadow-sm bg-white rounded-2xl overflow-hidden opacity-60">
           <CardHeader className="p-8 pb-4">
             <div className="flex items-center gap-2">
-              <div className="size-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                <ShieldCheck className="size-5" />
-              </div>
-              <CardTitle className="text-xl font-bold text-[#1a1a1a]">Security & Encryption</CardTitle>
+              <ShieldCheck className="size-5 text-slate-500" />
+              <CardTitle className="text-base font-semibold text-[#1a1a1a]">Security & Encryption</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-8 pt-0">
@@ -263,7 +253,7 @@ export default function OrganizationSettingsPage() {
               </div>
               <div className="size-10 rounded-xl bg-slate-200" />
             </div>
-            <p className="mt-4 text-[10px] font-bold text-indigo-500 uppercase tracking-widest text-center">Coming Soon to SUI CRM</p>
+            <p className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Coming Soon to SUI CRM</p>
           </CardContent>
         </Card>
       </div>

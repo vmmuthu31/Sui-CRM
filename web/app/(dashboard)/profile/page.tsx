@@ -57,7 +57,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <span className="size-8 rounded-full border-4 border-slate-200 border-t-indigo-500 animate-spin block" />
+        <span className="size-8 rounded-full border-4 border-slate-200 border-t-slate-500 animate-spin block" />
       </div>
     );
   }
@@ -70,30 +70,22 @@ export default function ProfilePage() {
       </div>
 
       {/* Avatar + role badge */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-black/5 p-8 flex items-center gap-6">
-        <div className={`size-20 rounded-3xl flex items-center justify-center text-3xl font-black shadow-lg ${
-          user?.role === "admin"
-            ? "bg-indigo-100 text-indigo-600 shadow-indigo-100"
-            : "bg-purple-100 text-purple-600 shadow-purple-100"
-        }`}>
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 flex items-center gap-6">
+        <div className="size-20 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-sm bg-slate-100 text-slate-700">
           {user ? (user.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)) : "?"}
         </div>
         <div className="space-y-1">
-          <p className="text-2xl font-black text-[#1a1a1a]">{user?.name ?? "—"}</p>
+          <p className="text-2xl font-bold text-[#1a1a1a]">{user?.name ?? "—"}</p>
           <p className="text-sm text-slate-500">{user?.email ?? "—"}</p>
-          <span className={`inline-block text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg ${
-            user?.role === "admin"
-              ? "bg-indigo-50 text-indigo-600"
-              : "bg-purple-50 text-purple-600"
-          }`}>
+          <span className="inline-block text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">
             {user?.role === "admin" ? "Admin" : "Member"}
           </span>
         </div>
       </div>
 
       {/* Editable fields */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-black/5 p-8 space-y-6">
-        <h2 className="text-lg font-black text-[#1a1a1a]">Account Details</h2>
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 space-y-6">
+        <h2 className="text-lg font-semibold text-[#1a1a1a]">Account Details</h2>
 
         {/* Name */}
         <div className="space-y-2">
@@ -105,12 +97,12 @@ export default function ProfilePage() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-[#1a1a1a] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
+              className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-[#1a1a1a] focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-300 transition-all"
             />
             <button
               onClick={handleSave}
               disabled={saving || !name.trim() || name === user?.name}
-              className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-5 py-3 bg-[#0f0f0f] hover:bg-black text-white rounded-2xl font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Save className="size-4" />
               {saving ? "Saving…" : "Save"}
@@ -138,7 +130,7 @@ export default function ProfilePage() {
             <span className="flex-1 text-[11px] font-mono text-slate-600 break-all select-all">
               {address ?? "—"}
             </span>
-            <button onClick={handleCopy} className="text-slate-400 hover:text-indigo-600 transition-colors shrink-0">
+            <button onClick={handleCopy} className="text-slate-400 hover:text-slate-700 transition-colors shrink-0">
               {copied ? <CheckCircle2 className="size-4 text-emerald-500" /> : <Copy className="size-4" />}
             </button>
           </div>
@@ -154,10 +146,10 @@ export default function ProfilePage() {
               {user?.orgName ?? (user?.role === "admin" ? "Not created yet" : "—")}
             </span>
             {user?.role === "admin" && (
-              <span className="ml-auto text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md">Admin</span>
+              <span className="ml-auto text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">Admin</span>
             )}
             {user?.role === "member" && (
-              <span className="ml-auto text-[10px] font-bold text-purple-500 bg-purple-50 px-2 py-0.5 rounded-md">Member</span>
+              <span className="ml-auto text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">Member</span>
             )}
           </div>
         </div>

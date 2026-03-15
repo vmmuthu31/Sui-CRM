@@ -121,27 +121,12 @@ export function ProfileInteractions({ profileId, onchainObjectId }: ProfileInter
   const TypeIcon = interactionTypes.find((t) => t.value === type)?.icon ?? MessageSquare;
 
   return (
-    <Card className="border-none shadow-xl shadow-slate-900/5 bg-white rounded-[32px] overflow-hidden">
-      <div className="h-1.5 w-full flex">
-        <div className="h-full flex-1 bg-slate-400 rounded-bl-full" />
-        <div className="h-full flex-1 bg-slate-500" />
-        <div className="h-full flex-1 bg-slate-600 rounded-br-full" />
-      </div>
+    <Card className="border border-slate-100 shadow-sm bg-white rounded-2xl overflow-hidden">
       <CardHeader className="p-8 pb-4">
-        <div className="flex items-center gap-4">
-          <div className="size-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 shadow-sm">
-            <MessageSquare className="size-7 stroke-[1.5]" />
-          </div>
-          <div>
-            <Badge className="bg-slate-100 text-slate-600 border-none px-2.5 py-0.5 font-bold text-[10px] uppercase tracking-widest mb-1.5">
-              {onchainObjectId ? "On-chain + DB" : "Database"}
-            </Badge>
-            <CardTitle className="text-2xl font-black text-[#1a1a1a] tracking-tight">Interactions</CardTitle>
-            <CardDescription className="text-slate-500 font-medium mt-0.5">
-              Log touchpoints. {onchainObjectId ? "Recorded on-chain and stored in DB." : "Stored in DB (contact not yet on-chain)."}
-            </CardDescription>
-          </div>
-        </div>
+        <CardTitle className="text-lg font-semibold text-[#0f0f0f]">Interactions</CardTitle>
+        <CardDescription className="text-slate-500 mt-0.5">
+          {onchainObjectId ? "Log touchpoints. Recorded on-chain and stored in DB." : "Log touchpoints. Stored in DB (contact not yet on-chain)."}
+        </CardDescription>
       </CardHeader>
       <CardContent className="p-8 pt-2 space-y-8">
         <form onSubmit={handleLog} className="rounded-2xl border border-slate-100 bg-slate-50/50 p-6 space-y-5">
@@ -181,7 +166,7 @@ export function ProfileInteractions({ profileId, onchainObjectId }: ProfileInter
           {error && <Alert variant="destructive" className="rounded-xl"><AlertDescription>{error}</AlertDescription></Alert>}
           <Button
             type="submit" disabled={loading || !address}
-            className="h-12 px-6 rounded-xl font-bold bg-[#1a1a1a] hover:bg-black text-white gap-2"
+            className="h-12 px-6 rounded-xl font-semibold bg-[#0f0f0f] hover:bg-black text-white gap-2"
           >
             {loading
               ? <><Loader2 className="size-5 animate-spin" />Logging…</>

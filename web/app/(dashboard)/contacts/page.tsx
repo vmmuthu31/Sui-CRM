@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Users, Search, Building2, ExternalLink, Mail, Twitter } from "lucide-react";
+import { Plus, Users, Search, Building2, Mail, Twitter, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useUser } from "@/hooks/useUser";
 
@@ -26,7 +25,6 @@ export default function ContactsPage() {
   const [loadingContacts, setLoadingContacts] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Members should see their admin's contacts
   const queryAddress = user?.role === "member" && user?.orgAdminAddress
     ? user.orgAdminAddress
     : user?.suiAddress;
@@ -51,113 +49,107 @@ export default function ContactsPage() {
   );
 
   return (
-    <div className="max-w-[1200px] mx-auto space-y-10">
+    <div className="max-w-5xl mx-auto space-y-6 pb-16">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">Contact Relations</h1>
-          <p className="text-sm text-slate-500 max-w-2xl">
-            Manage your network on-chain. Securely stored and encrypted interactions.
+          <h1 className="text-2xl font-bold tracking-tight text-[#0f0f0f]">Contacts</h1>
+          <p className="text-sm text-slate-500">
+            {contacts.length > 0 ? `${contacts.length} contact${contacts.length !== 1 ? "s" : ""}` : "Manage your on-chain contact network."}
           </p>
         </div>
-        <Button asChild className="h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-100">
-          <Link href="/contacts/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Contact
+        <Button asChild className="h-9 bg-[#0f0f0f] hover:bg-black text-white rounded-xl font-semibold text-sm shadow-sm">
+          <Link href="/contacts/new" className="flex items-center gap-2">
+            <Plus className="size-4" /> Add Contact
           </Link>
         </Button>
       </div>
 
-      <Card className="border-none shadow-xl shadow-black/5 bg-white rounded-3xl overflow-hidden">
-        <CardHeader className="p-8 pb-4">
-          <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-xl font-bold text-[#1a1a1a]">
-              All Contacts {!loading && contacts.length > 0 && (
-                <span className="text-sm font-normal text-slate-400 ml-2">({contacts.length})</span>
-              )}
-            </CardTitle>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search name, wallet, email..."
-                className="pl-9 h-9 bg-slate-50 border-transparent rounded-lg text-xs font-medium focus:bg-white transition-all"
-              />
-            </div>
+      {/* Search + list */}
+      <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-50">
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search contacts..."
+              className="pl-8 h-8 bg-slate-50 border-transparent rounded-lg text-xs font-medium focus:bg-white transition-all"
+            />
           </div>
-        </CardHeader>
-        <CardContent className="p-8 pt-0">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <span className="size-8 rounded-full border-4 border-slate-200 border-t-indigo-500 animate-spin block" />
+          {!loading && contacts.length > 0 && (
+            <span className="text-[11px] text-slate-400 font-medium ml-auto">
+              {filtered.length} of {contacts.length}
+            </span>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <span className="size-6 rounded-full border-2 border-slate-200 border-t-slate-600 animate-spin block" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="size-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 mb-4">
+              <Users className="size-6" />
             </div>
-          ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-100 py-20 text-center bg-slate-50/50">
-              <div className="size-16 rounded-3xl bg-white shadow-sm flex items-center justify-center text-slate-300 mb-4">
-                <Users className="size-8" />
-              </div>
-              <h3 className="font-bold text-[#1a1a1a]">
-                {search ? "No contacts match your search" : "No contacts yet"}
-              </h3>
-              <p className="text-sm text-slate-400 mt-1 max-w-[200px]">
-                {search ? "Try a different search term." : "Start building your network by adding your first contact."}
-              </p>
-              {!search && (
-                <Button asChild className="mt-6 bg-[#1a1a1a] hover:bg-slate-800 text-white rounded-xl font-bold h-11 px-8">
-                  <Link href="/contacts/new">Add contact</Link>
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((contact) => (
-                <Link
-                  key={contact._id}
-                  href={`/contacts/${contact._id}`}
-                  className="group block bg-slate-50/50 hover:bg-white rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-black/5 p-5 transition-all"
-                >
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="size-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-110 transition-transform">
-                      <span className="text-sm font-black">{contact.name.charAt(0).toUpperCase()}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-[#1a1a1a] truncate">{contact.name}</p>
-                      {contact.company && (
-                        <p className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
-                          <Building2 className="size-3" />{contact.company}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <p className="text-[10px] font-mono text-slate-400 truncate">
-                      {contact.walletAddress.slice(0, 10)}…{contact.walletAddress.slice(-8)}
-                    </p>
+            <p className="text-sm font-semibold text-[#0f0f0f]">
+              {search ? "No contacts match your search" : "No contacts yet"}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              {search ? "Try a different search term." : "Add your first contact to get started."}
+            </p>
+            {!search && (
+              <Button asChild className="mt-5 h-9 bg-[#0f0f0f] hover:bg-black text-white rounded-xl font-semibold text-sm">
+                <Link href="/contacts/new">Add contact</Link>
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-50">
+            {filtered.map((contact) => (
+              <Link
+                key={contact._id}
+                href={`/contacts/${contact._id}`}
+                className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50/60 transition-colors group"
+              >
+                <div className="size-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+                  <span className="text-xs font-bold">{contact.name.charAt(0).toUpperCase()}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-[#0f0f0f] truncate">{contact.name}</p>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    {contact.company && (
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1 truncate">
+                        <Building2 className="size-3 shrink-0" />{contact.company}
+                      </span>
+                    )}
                     {contact.email && (
-                      <p className="text-[10px] text-slate-400 flex items-center gap-1 truncate">
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1 truncate">
                         <Mail className="size-3 shrink-0" />{contact.email}
-                      </p>
+                      </span>
                     )}
                     {contact.twitter && (
-                      <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
                         <Twitter className="size-3 shrink-0" />{contact.twitter}
-                      </p>
+                      </span>
                     )}
                   </div>
-                  <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                      {new Date(contact.createdAt).toLocaleDateString()}
-                    </span>
-                    {contact.onchainTxDigest && (
-                      <ExternalLink className="size-3 text-slate-300 group-hover:text-indigo-400 transition-colors" />
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                </div>
+                <div className="text-right shrink-0 hidden sm:block">
+                  <p className="text-[10px] font-mono text-slate-300">
+                    {contact.walletAddress.slice(0, 8)}…{contact.walletAddress.slice(-6)}
+                  </p>
+                  <p className="text-[10px] text-slate-300 mt-0.5">
+                    {new Date(contact.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <ArrowRight className="size-4 text-slate-200 group-hover:text-slate-400 transition-colors shrink-0" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

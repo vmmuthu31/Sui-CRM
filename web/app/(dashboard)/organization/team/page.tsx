@@ -87,7 +87,7 @@ export default function TeamPage() {
         </div>
         {isAdmin && (
           <button onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 h-11 px-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-100 transition-all">
+            className="flex items-center gap-2 h-11 px-5 bg-[#0f0f0f] hover:bg-black text-white rounded-xl font-bold text-sm shadow-sm transition-all">
             <UserPlus className="size-4" /> Invite Member
           </button>
         )}
@@ -104,13 +104,13 @@ export default function TeamPage() {
       )}
 
       {showForm && isAdmin && (
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-black/5 p-8">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8">
           <div className="flex items-center gap-3 mb-6">
-            <div className="size-10 rounded-2xl bg-indigo-50 flex items-center justify-center">
-              <Mail className="size-5 text-indigo-600" />
+            <div className="size-10 rounded-2xl bg-slate-100 flex items-center justify-center">
+              <Mail className="size-5 text-slate-600" />
             </div>
             <div>
-              <h2 className="text-base font-black text-[#1a1a1a]">Send Invite</h2>
+              <h2 className="text-base font-semibold text-[#1a1a1a]">Send Invite</h2>
               <p className="text-xs text-slate-500">They will get an email with a one-click sign-in link.</p>
             </div>
           </div>
@@ -120,19 +120,19 @@ export default function TeamPage() {
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Full Name</label>
                 <input type="text" placeholder="e.g. Alice Chen" value={inviteeName}
                   onChange={(e) => setInviteeName(e.target.value)} required
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-[#1a1a1a] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all" />
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-[#1a1a1a] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-300 transition-all" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Email Address</label>
                 <input type="email" placeholder="alice@company.com" value={inviteeEmail}
                   onChange={(e) => setInviteeEmail(e.target.value)} required
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-[#1a1a1a] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all" />
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-[#1a1a1a] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-300 transition-all" />
               </div>
             </div>
             <div className="flex items-center gap-3 pt-2">
               <button type="submit" disabled={sending || !inviteeName.trim() || !inviteeEmail.trim()}
-                className="flex items-center gap-2 h-11 px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                {sending ? <><span className="size-4 rounded-full border-2 border-indigo-300 border-t-white animate-spin" />Sending…</> : <><Send className="size-4" />Send Invite</>}
+                className="flex items-center gap-2 h-11 px-6 bg-[#0f0f0f] hover:bg-black text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                {sending ? <><span className="size-4 rounded-full border-2 border-slate-600 border-t-white animate-spin" />Sending…</> : <><Send className="size-4" />Send Invite</>}
               </button>
               <button type="button" onClick={() => setShowForm(false)}
                 className="h-11 px-5 text-slate-500 hover:text-slate-800 font-bold text-sm transition-colors">
@@ -143,19 +143,19 @@ export default function TeamPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-black/5 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-8 py-6 border-b border-slate-50">
-          <ShieldCheck className="size-5 text-indigo-500" />
-          <h2 className="text-lg font-bold text-[#1a1a1a]">Sent Invites</h2>
+          <ShieldCheck className="size-5 text-slate-500" />
+          <h2 className="text-lg font-semibold text-[#1a1a1a]">Sent Invites</h2>
           {invites.length > 0 && (
-            <span className="ml-auto text-[10px] font-black bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+            <span className="ml-auto text-[10px] font-semibold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg uppercase tracking-wider">
               {invites.length} total
             </span>
           )}
         </div>
         {loadingInvites ? (
           <div className="flex items-center justify-center py-20">
-            <span className="size-8 rounded-full border-4 border-slate-200 border-t-indigo-500 animate-spin block" />
+            <span className="size-8 rounded-full border-4 border-slate-200 border-t-slate-500 animate-spin block" />
           </div>
         ) : invites.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-8">
