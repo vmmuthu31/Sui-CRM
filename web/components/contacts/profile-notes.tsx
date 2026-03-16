@@ -12,7 +12,10 @@ import {
   Check,
   ShieldCheck,
 } from "lucide-react";
-import { useUnifiedAccount, useUnifiedSignPersonalMessage } from "@/hooks/useUnifiedAuth";
+import {
+  useUnifiedAccount,
+  useUnifiedSignPersonalMessage,
+} from "@/hooks/useUnifiedAuth";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -57,7 +60,8 @@ function formatDate(iso: string) {
     return d.toLocaleDateString(undefined, {
       month: "short",
       day: "numeric",
-      year: d.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+      year:
+        d.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
     });
   } catch {
     return "";
@@ -69,7 +73,9 @@ export function ProfileNotes({ profileId }: ProfileNotesProps) {
   const [notes, setNotes] = useState<ResourceMetadata[]>([]);
   const [loadingNotes, setLoadingNotes] = useState(true);
   const [decryptDialogOpen, setDecryptDialogOpen] = useState(false);
-  const [decryptTarget, setDecryptTarget] = useState<ResourceMetadata | null>(null);
+  const [decryptTarget, setDecryptTarget] = useState<ResourceMetadata | null>(
+    null,
+  );
   const [decryptStep, setDecryptStep] = useState<DecryptStep>("idle");
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
   const [decryptError, setDecryptError] = useState<string | null>(null);
@@ -129,19 +135,20 @@ export function ProfileNotes({ profileId }: ProfileNotesProps) {
       setDecryptedContent(null);
 
       try {
-        const sessionKey = await crmDecryptionService.createSessionKey(
-          currentAddress
-        );
+        const sessionKey =
+          await crmDecryptionService.createSessionKey(currentAddress);
         setDecryptStep("sign");
 
-        const signature = await signPersonalMessage(sessionKey.getPersonalMessage());
+        const signature = await signPersonalMessage(
+          sessionKey.getPersonalMessage(),
+        );
         await sessionKey.setPersonalMessageSignature(signature);
 
         setDecryptStep("decrypt");
         const result = await crmDecryptionService.downloadAndDecryptResources(
           [resource],
           orgRegistryId,
-          sessionKey
+          sessionKey,
         );
 
         if (result.success && result.decryptedFileUrls?.length) {
@@ -162,7 +169,7 @@ export function ProfileNotes({ profileId }: ProfileNotesProps) {
         toast.error("Decryption failed", { description: msg });
       }
     },
-    [currentAddress, signPersonalMessage, orgRegistryId]
+    [currentAddress, signPersonalMessage, orgRegistryId],
   );
 
   const handleCopy = useCallback(() => {
@@ -197,7 +204,15 @@ export function ProfileNotes({ profileId }: ProfileNotesProps) {
       sui_explorer_url: "",
     };
     await runDecrypt(mockResource);
-  }, [profileId, orgRegistryId, devBlobId, devEncId, devResId, currentAddress, runDecrypt]);
+  }, [
+    profileId,
+    orgRegistryId,
+    devBlobId,
+    devEncId,
+    devResId,
+    currentAddress,
+    runDecrypt,
+  ]);
 
   return (
     <>
@@ -283,8 +298,9 @@ export function ProfileNotes({ profileId }: ProfileNotesProps) {
             <ul className="space-y-3">
               {notes.map((note) => {
                 const accessLabel =
-                  ACCESS_LEVEL_OPTIONS.find((o) => o.value === note.access_level)
-                    ?.label ?? `Level ${note.access_level}`;
+                  ACCESS_LEVEL_OPTIONS.find(
+                    (o) => o.value === note.access_level,
+                  )?.label ?? `Level ${note.access_level}`;
                 return (
                   <li
                     key={note.resource_id}
@@ -323,11 +339,19 @@ export function ProfileNotes({ profileId }: ProfileNotesProps) {
           )}
 
           {/* Decrypt result / progress dialog */}
-          <Dialog open={decryptDialogOpen} onOpenChange={handleCloseDecryptDialog}>
+          <Dialog
+            open={decryptDialogOpen}
+            onOpenChange={handleCloseDecryptDialog}
+          >
             <DialogContent
               className="sm:max-w-md rounded-3xl border-0 shadow-2xl p-8"
               onPointerDownOutside={(e) => {
-                if (decryptStep === "decrypt" || decryptStep === "sign" || decryptStep === "session") e.preventDefault();
+                if (
+                  decryptStep === "decrypt" ||
+                  decryptStep === "sign" ||
+                  decryptStep === "session"
+                )
+                  e.preventDefault();
               }}
             >
               <DialogHeader>
@@ -340,7 +364,8 @@ export function ProfileNotes({ profileId }: ProfileNotesProps) {
                     <>
                       <Loader2 className="size-5 animate-spin shrink-0" />
                       {decryptStep === "session" && "Preparing session…"}
-                      {decryptStep === "sign" && "Sign in your wallet to authorize."}
+                      {decryptStep === "sign" &&
+                        "Sign in your wallet to authorize."}
                       {decryptStep === "decrypt" && "Decrypting…"}
                     </>
                   )}
@@ -388,7 +413,7 @@ export function ProfileNotes({ profileId }: ProfileNotesProps) {
           </Dialog>
 
           {/* Developer: manual IDs (collapsible) */}
-          <div className="pt-4 border-t border-slate-100">
+          {/* <div className="pt-4 border-t border-slate-100">
             <button
               type="button"
               className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
@@ -460,7 +485,7 @@ export function ProfileNotes({ profileId }: ProfileNotesProps) {
                 )}
               </div>
             )}
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </>

@@ -43,7 +43,9 @@ export default function ContactProfilePage() {
           <div className="flex items-center gap-3 min-w-0">
             <div className="size-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 shrink-0">
               {contact?.name ? (
-                <span className="text-lg font-bold">{contact.name.charAt(0).toUpperCase()}</span>
+                <span className="text-lg font-bold">
+                  {contact.name.charAt(0).toUpperCase()}
+                </span>
               ) : (
                 <User className="size-6" />
               )}
@@ -55,21 +57,26 @@ export default function ContactProfilePage() {
               <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                 {contact?.company && (
                   <span className="text-xs text-slate-500 flex items-center gap-1">
-                    <Building2 className="size-3" />{contact.company}
+                    <Building2 className="size-3" />
+                    {contact.company}
                   </span>
                 )}
                 {contact?.email && (
                   <span className="text-xs text-slate-500 flex items-center gap-1">
-                    <Mail className="size-3" />{contact.email}
+                    <Mail className="size-3" />
+                    {contact.email}
                   </span>
                 )}
                 {contact?.twitter && (
                   <span className="text-xs text-slate-500 flex items-center gap-1">
-                    <Twitter className="size-3" />{contact.twitter}
+                    <Twitter className="size-3" />
+                    {contact.twitter}
                   </span>
                 )}
                 {!contact?.name && (
-                  <p className="font-mono text-xs text-slate-500 truncate">{id}</p>
+                  <p className="font-mono text-xs text-slate-500 truncate">
+                    {id}
+                  </p>
                 )}
               </div>
             </div>
@@ -79,51 +86,66 @@ export default function ContactProfilePage() {
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="w-full sm:w-auto h-auto flex flex-wrap gap-1 p-1.5 rounded-2xl bg-slate-100 border border-slate-200/80">
+        <TabsList className="w-full h-12 flex items-stretch gap-1.5 py-0 px-1.5 rounded-2xl bg-slate-100/80 border border-slate-200/60">
           <TabsTrigger
             value="overview"
-            className="rounded-xl px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
+            className="flex-1 min-w-0 h-full rounded-xl flex items-center justify-center text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/80 border border-transparent"
           >
             Overview
           </TabsTrigger>
           <TabsTrigger
             value="notes"
-            className="rounded-xl px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
+            className="flex-1 min-w-0 h-full rounded-xl flex items-center justify-center text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/80 border border-transparent"
           >
             Notes
           </TabsTrigger>
           <TabsTrigger
             value="files"
-            className="rounded-xl px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
+            className="flex-1 min-w-0 h-full rounded-xl flex items-center justify-center text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/80 border border-transparent"
           >
             Files
           </TabsTrigger>
           <TabsTrigger
             value="interactions"
-            className="rounded-xl px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
+            className="flex-1 min-w-0 h-full rounded-xl flex items-center justify-center text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/80 border border-transparent"
           >
             Interactions
           </TabsTrigger>
           <TabsTrigger
             value="onchain"
-            className="rounded-xl px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm"
+            className="flex-1 min-w-0 h-full rounded-xl flex items-center justify-center text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors data-[state=active]:bg-white data-[state=active]:text-[#1a1a1a] data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/80 border border-transparent"
           >
             Onchain
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="overview" className="mt-6">
+        <TabsContent
+          value="overview"
+          className="mt-6 focus-visible:outline-none"
+        >
           <ProfileOverview profileId={id} contact={contact} />
         </TabsContent>
-        <TabsContent value="notes" className="mt-6">
+        <TabsContent value="notes" className="mt-6 focus-visible:outline-none">
           <ProfileNotes profileId={id} />
         </TabsContent>
-        <TabsContent value="files" className="mt-6">
-          <ProfileFiles profileId={id} onchainObjectId={contact?.onchainObjectId} />
+        <TabsContent value="files" className="mt-6 focus-visible:outline-none">
+          <ProfileFiles
+            profileId={id}
+            onchainObjectId={contact?.onchainObjectId}
+          />
         </TabsContent>
-        <TabsContent value="interactions" className="mt-6">
-          <ProfileInteractions profileId={id} onchainObjectId={contact?.onchainObjectId} />
+        <TabsContent
+          value="interactions"
+          className="mt-6 focus-visible:outline-none"
+        >
+          <ProfileInteractions
+            profileId={id}
+            onchainObjectId={contact?.onchainObjectId}
+          />
         </TabsContent>
-        <TabsContent value="onchain" className="mt-6">
+        <TabsContent
+          value="onchain"
+          className="mt-6 focus-visible:outline-none"
+        >
           <ProfileOnchain profileId={id} contact={contact} />
         </TabsContent>
       </Tabs>

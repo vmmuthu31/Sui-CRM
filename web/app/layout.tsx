@@ -20,7 +20,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Tidal",
-  description: "Privacy-first Web3 CRM with Seal encryption and Walrus storage",
+  description:
+    "Privacy-first Web3 CRM with Seal encryption and Walrus storage",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({
