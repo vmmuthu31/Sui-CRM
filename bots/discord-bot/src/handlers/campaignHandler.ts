@@ -1,15 +1,11 @@
-import type {
-  Message,
-} from "discord.js";
+import type { Message } from "discord.js";
 import {
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
 } from "discord.js";
-import {
-  getCampaignStats,
-} from "../services/campaignService.js";
+import { getCampaignStats } from "../services/campaignService.js";
 import type { Campaign } from "../types.js";
 
 interface CampaignStatsResponse {
@@ -189,10 +185,7 @@ async function sendCampaignStats(
   }
 }
 
-async function createCampaign(
-  message: Message,
-  args: string[],
-): Promise<void> {
+async function createCampaign(message: Message, args: string[]): Promise<void> {
   if (args.length < 1) {
     await message.reply(
       "❌ Usage: `!campaign-create <campaign_name> [description]`\nExample: `!campaign-create Q1_2024_Launch Launch campaign for Q1`",
@@ -317,7 +310,9 @@ async function announceCampaign(
       const channel = await message.guild.channels.fetch(campaign.channel_id);
       if (channel?.isTextBased()) {
         await channel.send({ embeds: [embed] });
-        await message.reply(`✅ Announcement posted to <#${campaign.channel_id}>`);
+        await message.reply(
+          `✅ Announcement posted to <#${campaign.channel_id}>`,
+        );
       }
     }
   } catch (error) {
