@@ -5,6 +5,7 @@ import {
   enqueueCommunityEvent,
   startEventBatcher,
 } from "./services/eventBatcher.js";
+import { enrichCampaignMetadata } from "./services/campaignApi.js";
 
 dotenv.config();
 startEventBatcher();
@@ -54,7 +55,8 @@ async function handleCast(message: Message) {
     },
   };
 
-  await enqueueCommunityEvent(event);
+  const enriched = await enrichCampaignMetadata(event);
+  await enqueueCommunityEvent(enriched);
 }
 
 async function handleReaction(message: Message) {

@@ -1,6 +1,7 @@
 import type { Context } from "telegraf";
 import type { CommunityEvent } from "./types.js";
 import { enqueueCommunityEvent } from "./services/eventBatcher.js";
+import { enrichCampaignMetadata } from "./services/campaignApi.js";
 
 export async function handleNewChatMembers(ctx: Context): Promise<void> {
   if (!("new_chat_members" in ctx.message!)) return;
@@ -56,7 +57,8 @@ export async function handleMessage(ctx: Context): Promise<void> {
     },
   };
 
-  await enqueueCommunityEvent(event);
+  const enriched = await enrichCampaignMetadata(event);
+  await enqueueCommunityEvent(enriched);
 }
 
 export async function handleCallbackQuery(ctx: Context): Promise<void> {
@@ -85,7 +87,8 @@ export async function handleCallbackQuery(ctx: Context): Promise<void> {
     },
   };
 
-  await enqueueCommunityEvent(event);
+  const enriched = await enrichCampaignMetadata(event);
+  await enqueueCommunityEvent(enriched);
   await ctx.answerCbQuery("✅ Participation recorded!");
 }
 

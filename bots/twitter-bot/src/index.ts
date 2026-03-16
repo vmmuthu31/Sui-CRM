@@ -9,6 +9,7 @@ import {
   enqueueCommunityEvent,
   startEventBatcher,
 } from "./services/eventBatcher.js";
+import { enrichCampaignMetadata } from "./services/campaignApi.js";
 
 dotenv.config();
 startEventBatcher();
@@ -82,7 +83,8 @@ async function handleTweet(tweet: TweetV2SingleStreamResult) {
     },
   };
 
-  await enqueueCommunityEvent(event);
+  const enriched = await enrichCampaignMetadata(event);
+  await enqueueCommunityEvent(enriched);
 }
 
 function extractCampaignId(text: string): string | undefined {

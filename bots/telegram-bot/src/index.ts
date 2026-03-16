@@ -6,6 +6,7 @@ import {
   handleCallbackQuery,
 } from "./handlers";
 import { startEventBatcher } from "./services/eventBatcher.js";
+import { getCampaignById } from "./services/campaignApi.js";
 
 dotenv.config();
 
@@ -57,8 +58,16 @@ bot.command("campaign", async (ctx) => {
     return;
   }
 
+  const campaign = await getCampaignById(campaignId);
+  if (!campaign) {
+    await ctx.reply(`❌ Campaign not found: ${campaignId}`);
+    return;
+  }
+
   await ctx.reply(
-    `📢 Campaign: ${campaignId}\n\n` +
+    `📢 Campaign: ${campaign.name}\n` +
+      `ID: ${campaign.id}\n` +
+      `Status: ${campaign.status}\n\n` +
       `React to this message or click the button below to participate!`,
     {
       reply_markup: {
