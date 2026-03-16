@@ -73,22 +73,8 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-6 lg:px-12 h-20 flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="relative size-10 flex items-center justify-center rounded-2xl bg-gradient-to-tr from-[#1A1A1A] to-gray-800 shadow-md">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#paint0_linear)" />
-                  <path d="M4 16L12 20L20 16" stroke="url(#paint1_linear)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M4 12V16L12 20V16L4 12Z" fill="white" fillOpacity="0.2" />
-                  <defs>
-                    <linearGradient id="paint0_linear" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#60A5FA" />
-                      <stop offset="1" stopColor="#A78BFA" />
-                    </linearGradient>
-                    <linearGradient id="paint1_linear" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#60A5FA" />
-                      <stop offset="1" stopColor="#A78BFA" />
-                    </linearGradient>
-                  </defs>
-                </svg>
+              <div className="relative size-10 flex items-center justify-center rounded-2xl shadow-md overflow-hidden bg-[#0A0F1C]">
+                <img src="/logo.png" alt="SUI CRM Logo" className="w-[115%] h-[115%] object-cover" />
               </div>
               <span className="font-extrabold text-[#1A1A1A] tracking-[-0.03em] text-[22px] cursor-pointer">SUI CRM</span>
             </div>
@@ -456,22 +442,8 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="flex flex-col items-center justify-center mb-16">
-              <div className="relative size-12 flex items-center justify-center rounded-2xl bg-gradient-to-tr from-[#1A1A1A] to-gray-800 shadow-md mb-6 hover:scale-110 transition-transform">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="url(#pf0_linear)" />
-                  <path d="M4 16L12 20L20 16" stroke="url(#pf1_linear)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M4 12V16L12 20V16L4 12Z" fill="white" fillOpacity="0.2" />
-                  <defs>
-                    <linearGradient id="pf0_linear" x1="12" y1="4" x2="12" y2="12" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#60A5FA" />
-                      <stop offset="1" stopColor="#A78BFA" />
-                    </linearGradient>
-                    <linearGradient id="pf1_linear" x1="12" y1="16" x2="12" y2="20" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#60A5FA" />
-                      <stop offset="1" stopColor="#A78BFA" />
-                    </linearGradient>
-                  </defs>
-                </svg>
+              <div className="relative size-12 flex items-center justify-center rounded-2xl shadow-md mb-6 hover:scale-110 transition-transform overflow-hidden bg-[#0A0F1C]">
+                <img src="/logo.png" alt="SUI CRM Logo" className="w-[115%] h-[115%] object-cover" />
               </div>
               <h2 className="text-2xl font-bold text-[#1A1A1A] text-center">Built on Sui. Secured by cryptography.</h2>
             </div>

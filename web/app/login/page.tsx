@@ -55,8 +55,8 @@ export default function LoginPage() {
 
         {/* Brand */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center size-16 rounded-3xl bg-[#1a1a1a] shadow-2xl shadow-black/20 mx-auto">
-            <ShieldCheck className="size-8 text-white" />
+          <div className="inline-flex items-center justify-center size-16 rounded-3xl bg-[#0A0F1C] shadow-2xl shadow-black/20 mx-auto overflow-hidden">
+            <img src="/logo.png" alt="SUI CRM" className="w-[115%] h-[115%] object-cover" />
           </div>
           <div>
             <h1 className="text-4xl font-black tracking-tight text-[#1a1a1a]">SUI CRM</h1>

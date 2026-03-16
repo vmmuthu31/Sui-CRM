@@ -69,8 +69,8 @@ export function AppSidebar() {
     <Sidebar className="border-r border-slate-100 bg-white/80 backdrop-blur-xl">
       <SidebarHeader className="p-6 pb-8">
         <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="size-11 rounded-2xl bg-[#1a1a1a] flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-black/20 group-hover:scale-105 transition-transform duration-500">
-            S
+          <div className="size-11 rounded-2xl bg-[#0A0F1C] flex items-center justify-center shadow-xl shadow-black/20 group-hover:scale-105 transition-transform duration-500 overflow-hidden shrink-0">
+            <img src="/logo.png" alt="SUI CRM" className="w-[115%] h-[115%] object-cover" />
           </div>
           <div className="flex flex-col">
             <span className="font-black text-lg tracking-tight text-[#1a1a1a] leading-none mb-1">
