@@ -24,10 +24,22 @@ interface CampaignStatsResponse {
   }>;
 }
 
-const CAMPAIGN_API_BASE_URL =
-  process.env.CAMPAIGN_API_BASE_URL ||
-  process.env.WEBHOOK_URL?.replace("/api/webhooks/discord", "") ||
-  "http://localhost:3000";
+function getCampaignApiBaseUrl(): string {
+  if (process.env.CAMPAIGN_API_BASE_URL) {
+    return process.env.CAMPAIGN_API_BASE_URL;
+  }
+
+  const webhookUrl = process.env.WEBHOOK_URL;
+  if (webhookUrl) {
+    return webhookUrl
+      .replace(/\/api\/webhooks\/discord\/?$/, "")
+      .replace(/\/webhooks\/discord\/?$/, "");
+  }
+
+  return "http://localhost:3000";
+}
+
+const CAMPAIGN_API_BASE_URL = getCampaignApiBaseUrl();
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${CAMPAIGN_API_BASE_URL}${path}`, {
