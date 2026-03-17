@@ -1,5 +1,5 @@
+import "dotenv/config";
 import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
-import dotenv from "dotenv";
 import {
   handleGuildMemberAdd,
   handleMessageReactionAdd,
@@ -8,7 +8,6 @@ import {
 import { initializeCampaignTracking } from "./services/campaignService.js";
 import { startEventBatcher } from "./services/eventBatcher.js";
 
-dotenv.config();
 
 // Log Seal/Walrus integration status at startup
 try {
