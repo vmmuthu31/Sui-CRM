@@ -8,9 +8,12 @@ import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
 
 const NETWORK = (process.env.SUI_NETWORK as "testnet" | "mainnet" | "devnet" | "localnet") || "testnet";
 
+const RPC_URL = process.env.SUI_RPC_URL ||
+  (NETWORK === "testnet" ? "https://rpc.testnet.sui.io" : getJsonRpcFullnodeUrl(NETWORK));
+
 export const suiClient = new SuiJsonRpcClient({
   network: NETWORK,
-  url: getJsonRpcFullnodeUrl(NETWORK),
+  url: RPC_URL,
 });
 
 /**
